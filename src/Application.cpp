@@ -7,7 +7,7 @@ const uint32_t HEIGHT = 600;
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
-Application::Application()
+vks::Application::Application()
     : instance("Hello Triangle", "No Engine", true), debugMessenger(instance),
       window({WIDTH, HEIGHT}, "Vulkan", instance),
       device(instance, window, Instance::DeviceExtensions),
@@ -17,16 +17,6 @@ Application::Application()
                      commandPool),
       syncObjects(device, swapChain.numImages(), MAX_FRAMES_IN_FLIGHT),
       interface(instance, window, device, swapChain, graphicsPipeline) {}
-
-void Application::mainLoop() {
-  window.setDrawFrameFunc([this](bool &framebufferResized) {
-    drawImGui();
-    drawFrame(framebufferResized);
-  });
-
-  window.mainLoop();
-  vkDeviceWaitIdle(device.logical());
-}
 
 void Application::drawFrame(bool &framebufferResized) {
   vkWaitForFences(device.logical(), 1, &syncObjects.inFlightFence(currentFrame),
@@ -70,7 +60,10 @@ void Application::drawFrame(bool &framebufferResized) {
   submitInfo.commandBufferCount = 2;
   submitInfo.pCommandBuffers = cmdBuffers;
 
-  VkSemaphore signalSemaphores[] = {syncObjects.renderFinished(currentFrame)};
+  // Use the render-finished semaphore that corresponds to the acquired image.
+  // This prevents reusing a semaphore that is still being referenced by the
+  // presentation engine (common during swapchain recreation / resize).
+  VkSemaphore signalSemaphores[] = {syncObjects.renderFinished(imageIndex)};
   submitInfo.signalSemaphoreCount = 1;
   submitInfo.pSignalSemaphores = signalSemaphores;
 
@@ -97,6 +90,7 @@ void Application::drawFrame(bool &framebufferResized) {
   if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR ||
       framebufferResized) {
     recreateSwapChain(framebufferResized);
+    syncObjects.recreate(swapChain.numImages());
     framebufferResized = false;
   } else if (result != VK_SUCCESS) {
     throw std::runtime_error("Failed to present swap chain image");

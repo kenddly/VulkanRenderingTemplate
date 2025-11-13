@@ -27,6 +27,8 @@ public:
     return m_imagesInFlight[index];
   }
 
+  void recreate(uint32_t numImages);
+
 private:
   const Device &m_device;
 

@@ -30,36 +30,47 @@
 #include <vks/SyncObjects.hpp>
 #include <vks/Window.hpp>
 
+
+#include "Model.hpp"
+
 namespace vks {
 
-class Application {
-public:
-  Application();
+	class Application {
+	public:
+		Application();
 
-  void run() { mainLoop(); }
+		void run() { mainLoop(); }
 
-private:
-  Instance instance;
-  DebugUtilsMessenger debugMessenger;
-  Window window;
-  Device device;
-  SwapChain swapChain;
-  BasicRenderPass renderPass;
-  GraphicsPipeline graphicsPipeline;
-  CommandPool commandPool;
-  BasicCommandBuffers commandBuffers;
-  SyncObjects syncObjects;
+	private:
+		Instance instance;
+		DebugUtilsMessenger debugMessenger;
+		Window window;
+		Device device;
+		SwapChain swapChain;
+		BasicRenderPass renderPass;
+		GraphicsPipeline graphicsPipeline;
+		CommandPool commandPool;
+		BasicCommandBuffers commandBuffers;
+		SyncObjects syncObjects;
 
-  ImGuiApp interface;
+		ImGuiApp interface;
 
-  size_t currentFrame = 0;
+		size_t currentFrame = 0;
 
-  void mainLoop();
+		void mainLoop() {
+			window.setDrawFrameFunc([this](bool& framebufferResized) {
+				drawImGui();
+				drawFrame(framebufferResized);
+				});
+
+			window.mainLoop();
+			vkDeviceWaitIdle(device.logical());
+		}
 
   void drawFrame(bool &framebufferResized);
-  void drawImGui();
+		void drawImGui();
 
   void recreateSwapChain(bool &framebufferResized);
-};
+	};
 
 } // namespace vks

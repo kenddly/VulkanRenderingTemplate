@@ -1,100 +1,95 @@
-#
-# VulkanStarter
-#
+cmake_minimum_required(VERSION 3.20)
 
-cmake_minimum_required(VERSION 3.12)
+# write the cmakebinarydir to std
+message(STATUS "CMAKE_BINARY_DIR: ${CMAKE_BINARY_DIR}")
 
-include(cmake/tools/guards.cmake)
-
-#
-# Project configuration
-#
+if(EXISTS "${CMAKE_BINARY_DIR}/generators/conan_toolchain.cmake")
+    include("${CMAKE_BINARY_DIR}/generators/conan_toolchain.cmake")
+endif()
 
 project(
     VulkanStarter
-    DESCRIPTION "A template for Vulkan C++ projects with GLFW, GLM and ImGUI using CMake, CI, Conan and doctest"
-    HOMEPAGE_URL "https://github.com/florianvazelle/VulkanStarter"
+    DESCRIPTION "A template for Vulkan C++ projects with GLFW, GLM, ImGUI and Vulkan using Conan 2 and CMake"
     LANGUAGES CXX
 )
 
+# ---------------------------
+# C++ Standard
+# ---------------------------
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Vulkan is a required dependency.
-include(FindVulkan)
-if(NOT VULKAN_FOUND)
-    message(FATAL_ERROR "Vulkan SDK not installed.")
-endif()
+# ---------------------------
+# Packages provided by Conan
+# ---------------------------
+# These names come from CMakeDeps generated .cmake files
+find_package(glfw3 REQUIRED)
+find_package(glm REQUIRED)
+find_package(imgui REQUIRED)
+find_package(VulkanMemoryAllocator REQUIRED)
+find_package(glslang REQUIRED)
 
-include(cmake/tools/compile-shader.cmake)
+# Vulkan (native system SDK)
+find_package(Vulkan REQUIRED)
 
-# ---- Options ----
+# ---------------------------
+# Source files
+# ---------------------------
+file(GLOB_RECURSE PROJECT_SOURCES "${CMAKE_SOURCE_DIR}/src/*.cpp" "${CMAKE_SOURCE_DIR}/bindings/*.cpp")
+file(GLOB_RECURSE PROJECT_HEADERS "${CMAKE_SOURCE_DIR}/include/*.hpp" "${CMAKE_SOURCE_DIR}/bindings/*.h")
 
-option(ENABLE_WARNINGS_SETTINGS "Allow target_set_warnings to add flags and defines." OFF)
+# ---------------------------
+# Create main library
+# ---------------------------
+add_library(${PROJECT_NAME} OBJECT
+    ${PROJECT_SOURCES}
+    ${PROJECT_HEADERS}
+)
 
-#
-# Define library target
-#
+target_include_directories(${PROJECT_NAME}
+    PUBLIC ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/bindings
+)
 
-file(GLOB_RECURSE PROJECT_SOURCES "${CMAKE_SOURCE_DIR}/src/*.cpp")
-file(GLOB_RECURSE PROJECT_HEADERS "${CMAKE_SOURCE_DIR}/include/*.hpp")
-
-# ---- Conan package ----
-
-if(CONAN_EXPORTED)
-    include(${CMAKE_CURRENT_BINARY_DIR}/conanbuildinfo.cmake)
-    conan_basic_setup()
-else()
-    include("${CMAKE_SOURCE_DIR}/cmake/conan.cmake")
-    conan_cmake_run(CONANFILE conanfile.txt BASIC_SETUP BUILD missing)
-endif()
-
-file(GLOB_RECURSE EXTERNALS "${CMAKE_CURRENT_BINARY_DIR}/external/*")
-
-
-# ---- Create library ----
-
-add_library(${PROJECT_NAME} OBJECT ${PROJECT_SOURCES} ${PROJECT_HEADERS} ${EXTERNALS})
-
-target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/include)
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/external)
-
-target_link_libraries(${PROJECT_NAME} PUBLIC ${CONAN_LIBS} Vulkan::Vulkan)
+# Needed for ImGui Vulkan backend
 target_compile_definitions(${PROJECT_NAME} PUBLIC IMGUI_IMPL_VULKAN)
 
-# target_set_warnings(${PROJECT_NAME} ENABLE ALL AS_ERROR ALL DISABLE Annoying)
+# Link Conan libraries
+target_link_libraries(${PROJECT_NAME}
+    PUBLIC
+        Vulkan::Vulkan
+        glfw
+        glm::glm
+        imgui::imgui
+        GPUOpen::VulkanMemoryAllocator
+        glslang::glslang
+)
 
-# ---- Compile shader into SPIR-V ----
+# ---------------------------
+# Shader compilation
+# ---------------------------
+file(GLOB_RECURSE SHADERS
+    "${CMAKE_SOURCE_DIR}/assets/shaders/*.frag"
+    "${CMAKE_SOURCE_DIR}/assets/shaders/*.vert"
+)
 
-file(GLOB_RECURSE SHADERS "${CMAKE_SOURCE_DIR}/assets/shaders/*.vert" "${CMAKE_SOURCE_DIR}/assets/shaders/*.frag")
-
+include(cmake/tools/compile-shader.cmake)
 compile_shaders(TARGETS ${SHADERS})
 
-#
-# Entry points
-#
-
-option(BUILD_APPS "Enable building with entry points." ON)
+# ---------------------------
+# Optional Executable
+# ---------------------------
+option(BUILD_APPS "Build example application" ON)
 
 if(BUILD_APPS)
-    # Add an executable for the file app/main.cpp
     add_executable(${PROJECT_NAME}Standalone app/main.cpp)
-
-    # Link the executable to library
     target_link_libraries(${PROJECT_NAME}Standalone PRIVATE ${PROJECT_NAME})
-
-    option(INSTALL_APPS "Enable installation of the entry points." OFF)
-
-    if (INSTALL_APPS)
-        install(DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} DESTINATION .)
-    endif()
 endif()
 
-
-#
+# ---------------------------
 # Tests
-#
-
-option(BUILD_TESTING "Enable building tests." OFF)
+# ---------------------------
+option(BUILD_TESTING "Enable tests with doctest" OFF)
 
 if(BUILD_TESTING)
     include(CTest)
@@ -102,16 +97,15 @@ if(BUILD_TESTING)
     add_subdirectory(test)
 endif()
 
-#
-# Documentation
-#
-
-option(BUILD_DOCS "Enable building with documentation." OFF)
+# ---------------------------
+# Documentation (Doxygen)
+# ---------------------------
+option(BUILD_DOCS "Enable Doxygen docs" OFF)
 
 if(BUILD_DOCS)
-    find_package(Doxygen 1.8)
-
+    find_package(Doxygen)
     if(DOXYGEN_FOUND)
         add_subdirectory(docs)
     endif()
 endif()
+

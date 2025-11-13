@@ -131,7 +131,7 @@ VkPresentModeKHR SwapChain::ChooseSwapPresentMode(
   // and if the queue is full already queued images are overwritten with newer
   // images
   for (const auto &availablePresentMode : availablePresentModes) {
-    if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
+    if (availablePresentMode == VK_PRESENT_MODE_IMMEDIATE_KHR) {
       return availablePresentMode;
     }
   }

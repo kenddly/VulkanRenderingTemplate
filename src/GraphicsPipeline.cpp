@@ -2,9 +2,12 @@
 
 #include <base_frag.h>
 #include <base_vert.h>
+#include <sphere_frag.h>
+#include <sphere_vert.h>
 
 #include <iostream>
 #include <vks/Device.hpp>
+#include <vks/Geometry.hpp>
 #include <vks/RenderPass.hpp>
 #include <vks/SwapChain.hpp>
 
@@ -52,8 +55,8 @@ void GraphicsPipeline::createPipeline() {
   VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
   vertexInputInfo.sType =
       VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-  vertexInputInfo.vertexBindingDescriptionCount = 0;
-  vertexInputInfo.vertexAttributeDescriptionCount = 0;
+    vertexInputInfo.vertexBindingDescriptionCount = 0;
+    vertexInputInfo.vertexAttributeDescriptionCount = 0;
 
   VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo,
                                                     fragShaderStageInfo};
@@ -140,7 +143,7 @@ void GraphicsPipeline::createPipeline() {
 
   VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
   pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-  pipelineLayoutInfo.setLayoutCount = 0;
+    pipelineLayoutInfo.setLayoutCount = 0;
   pipelineLayoutInfo.pushConstantRangeCount = 0;
 
   if (vkCreatePipelineLayout(m_device.logical(), &pipelineLayoutInfo, nullptr,
@@ -195,3 +198,4 @@ GraphicsPipeline::createShaderModule(const std::vector<unsigned char> &code) {
 
   return module;
 }
+

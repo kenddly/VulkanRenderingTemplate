@@ -16,9 +16,9 @@ function(compile_shaders)
 
 	# Find the glslangValidator executable
 	if(WIN32)
-		set(glslCompiler "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/glslangValidator.exe")
+		set(glslCompiler "glslangValidator.exe")
 	else()
-		set(glslCompiler "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/glslangValidator")
+		set(glslCompiler "glslangValidator")
 	endif()
 
 	# For each shader, we create a header file
