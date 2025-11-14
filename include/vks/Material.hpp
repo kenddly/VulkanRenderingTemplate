@@ -99,6 +99,13 @@ public:
      */
     VkDescriptorSet getDescriptorSet() const { return m_materialDescriptorSet; }
 
+    void updateUBO(const MaterialUBO& newUbo) {
+        uboData = newUbo;
+        m_uboBuffer->map();
+        m_uboBuffer->writeToBuffer(&uboData);
+        m_uboBuffer->unmap();
+    }
+
     MaterialUBO uboData;
 
 private:

@@ -268,21 +268,43 @@ void Application::drawImGui() {
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
 
-  static float f = 0.0f;
-  static int counter = 0;
+// --- NEW MATERIAL EDITOR ---
+    ImGui::Begin("Material Editor");
 
-  ImGui::Begin("Renderer Options");
-  ImGui::Text("This is some useful text.");
-  ImGui::SliderFloat("float", &f, 0.0f, 1.0f);
-  if (ImGui::Button("Button")) {
-    counter++;
-  }
-  ImGui::SameLine();
-  ImGui::Text("counter = %d", counter);
+    // We get a reference to the application's map of materials
+    // (This assumes m_materials is std::map<std::string, vks::Material>)
+    for (auto& pair : m_materials) {
+        auto materialName = pair.first;
+        vks::Material& material = pair.second;
 
-  ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
-              1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-  ImGui::End();
+        // Create a collapsible "tree node" for each material
+        if (ImGui::TreeNode(materialName.c_str())) {
+
+            // These widgets will return 'true' if they were changed
+            bool changed = false;
+
+            // Add a color picker for the baseColor
+            float color[4] = {
+                material.uboData.color.r,
+                material.uboData.color.g,
+                material.uboData.color.b,
+                material.uboData.color.a
+            };
+
+            changed |= ImGui::ColorEdit4("Base Color", color);
+
+            // If any widget was changed, update the material's UBO
+            if (changed) {
+                MaterialUBO newUbo{};
+                newUbo.color = {color[0], color[1], color[2], color[3]};
+                material.updateUBO(newUbo);
+            }
+
+            ImGui::TreePop();
+        }
+    }
+
+    ImGui::End(); // End Material Editor
 
   ImGui::Render();
 }
