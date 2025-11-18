@@ -1,7 +1,7 @@
 #include <vks/Application.hpp>
-#include <vks/Buffer.hpp>   // Need to include
-#include <vks/Material.hpp> // Need to include
-#include <vks/Model.hpp>    // Need to include
+#include <vks/Buffer.hpp>
+#include <vks/Material.hpp>
+#include <vks/Model.hpp>
 #include <stdexcept>
 #include <iostream>
 #include <array>
@@ -27,12 +27,8 @@ vks::Application::Application()
       device(instance, window, Instance::DeviceExtensions),
       swapChain(device, window),
       renderPass(device, swapChain),
-      // --- THIS IS THE FIX FROM THE PREVIOUS ERROR ---
-      // Pass the "reset" flag to the CommandPool constructor
       commandPool(device, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT),
-      // --- END FIX ---
       graphicsPipeline(device, swapChain, renderPass),
-      // We must pass 'graphicsPipeline' to the base CommandBuffers
       commandBuffers(device, renderPass, swapChain, graphicsPipeline, commandPool, *this),
       syncObjects(device, swapChain.numImages(), MAX_FRAMES_IN_FLIGHT),
       interface(instance, window, device, swapChain, graphicsPipeline)
@@ -42,18 +38,21 @@ vks::Application::Application()
     // Now that all core systems are up, load assets
     loadAssets();
     buildScene();
+
+    camera.init(&window.input(), swapChain.extent().width / (float)swapChain.extent().height);
 }
 
 /**
  * @brief Creates all asset registries (pools, models, materials).
  */
-void Application::loadAssets() {
+void Application::loadAssets()
+{
     // 1. Create Global Descriptor Pool
     m_globalDescriptorPool = vks::DescriptorPool::Builder(device)
-        .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 100) // For camera + materials
-        .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 100) // For textures
-        .setMaxSets(200)
-        .build();
+                             .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 100) // For camera + materials
+                             .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 100) // For textures
+                             .setMaxSets(200)
+                             .build();
 
     // 2. Create the Camera UBO Buffer
     m_cameraUboBuffer = std::make_unique<vks::Buffer>(
@@ -82,30 +81,31 @@ void Application::loadAssets() {
 
     // 5. Create Materials
     m_materials.emplace("red_sphere",
-        vks::Material{
-            device,
-            graphicsPipeline,
-            m_globalDescriptorPool,
-            "sphere", // The name of the pipeline to use
-            {1.0f, 0.0f, 0.0f, 1.0f} // Red
-        }
+                        vks::Material{
+                            device,
+                            graphicsPipeline,
+                            m_globalDescriptorPool,
+                            "sphere", // The name of the pipeline to use
+                            {1.0f, 15.0f / 255.0f, 0.0f, 1.0f} // Red
+                        }
     );
 
     m_materials.emplace("blue_sphere",
-        vks::Material{
-            device,
-            graphicsPipeline,
-            m_globalDescriptorPool,
-            "sphere", // Same pipeline
-            {0.0f, 0.2f, 0.8f, 1.0f} // Blue
-        }
+                        vks::Material{
+                            device,
+                            graphicsPipeline,
+                            m_globalDescriptorPool,
+                            "sphere", // Same pipeline
+                            {0.0f, 0.2f, 0.8f, 1.0f} // Blue
+                        }
     );
 }
 
 /**
  * @brief Populates the m_renderObjects list.
  */
-void Application::buildScene() {
+void Application::buildScene()
+{
     // Create a red sphere at (0, 0, 0)
     RenderObject redSphere;
     redSphere.model = &m_models.at("sphere"); // Use .at() to avoid default constructor
@@ -121,7 +121,8 @@ void Application::buildScene() {
     m_renderObjects.push_back(blueSphere);
 }
 
-void Application::updateUBOs(uint32_t currentImage) {
+void Application::updateUBOs(uint32_t currentImage)
+{
     // --- Update Camera UBO ---
     static auto startTime = std::chrono::high_resolution_clock::now();
     auto currentTime = std::chrono::high_resolution_clock::now();
@@ -129,24 +130,8 @@ void Application::updateUBOs(uint32_t currentImage) {
 
     CameraUBO ubo{};
 
-    // --- CAMERA FIX ---
-    // Let's pull the camera back to (5, 5, 5) to get a wider view
-    // and keep the Up vector as (0, 0, 1) (Z-up)
-    ubo.view = glm::lookAt(
-        glm::vec3(5.0f, 5.0f, 5.0f), // <-- Pulled camera back
-        glm::vec3(0.0f, 0.0f, 0.0f), // <-- Looking at the origin
-        glm::vec3(0.0f, 0.0f, 1.0f)  // <-- Z-up
-    );
-
-    ubo.proj = glm::perspective(
-        glm::radians(45.0f),
-        swapChain.extent().width / (float) swapChain.extent().height,
-        0.1f,
-        100.0f
-    );
-
-    // Flip Y for Vulkan
-    ubo.proj[1][1] *= -1;
+    ubo.view = camera.view();
+    ubo.proj = camera.proj();
 
     // Write to the mapped buffer
     m_cameraUboBuffer->writeToBuffer(&ubo, sizeof(ubo));
@@ -159,11 +144,14 @@ void Application::updateUBOs(uint32_t currentImage) {
     m_renderObjects[1].transform = glm::translate(glm::mat4(1.0f), {2.0f, 0.0f, 0.0f});
 }
 
-void Application::run() {
-    window.setDrawFrameFunc([this](bool& framebufferResized)
+void Application::run()
+{
+    window.setDrawFrameFunc([this](bool& framebufferResized, float deltaTime)
     {
         drawImGui();
         drawFrame(framebufferResized);
+
+        camera.update(deltaTime);
 
         if (window.input().isKeyPressed(GLFW_KEY_SPACE))
         {
@@ -176,115 +164,129 @@ void Application::run() {
 }
 
 // This function is not used
-void Application::mainLoop() {}
-
-
-void Application::drawFrame(bool &framebufferResized) {
-  vkWaitForFences(device.logical(), 1, &syncObjects.inFlightFence(currentFrame),
-                    VK_TRUE, UINT64_MAX);
-
-  uint32_t imageIndex;
-  VkResult result = vkAcquireNextImageKHR(
-      device.logical(), swapChain.handle(), UINT64_MAX,
-      syncObjects.imageAvailable(currentFrame), VK_NULL_HANDLE, &imageIndex);
-
-  if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-    recreateSwapChain(framebufferResized);
-    return;
-  } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
-    throw std::runtime_error("Failed to acquire swapchain image");
-  }
-
-  // Update all UBOs with fresh data for this frame
-  // *before* we record the command buffer.
-  updateUBOs(currentFrame);
-
-  if (syncObjects.imageInFlight(imageIndex) != VK_NULL_HANDLE) {
-    vkWaitForFences(device.logical(), 1, &syncObjects.imageInFlight(imageIndex),
-                    VK_TRUE, UINT64_MAX);
-  }
-  syncObjects.imageInFlight(imageIndex) =
-      syncObjects.inFlightFence(currentFrame);
-
-  // --- Record the command buffers ---
-  // (This will now read the UBO data we just wrote)
-  commandBuffers.recordCommands(imageIndex); // Your BasicCommandBuffers
-  interface.recordCommandBuffers(imageIndex);  // ImGui
-
-  // --- Submit ---
-  VkSubmitInfo submitInfo{};
-  submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-
-  VkSemaphore waitSemaphores[] = {syncObjects.imageAvailable(currentFrame)};
-  VkPipelineStageFlags waitStages[] = {
-      VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
-  submitInfo.waitSemaphoreCount = 1;
-  submitInfo.pWaitSemaphores = waitSemaphores;
-  submitInfo.pWaitDstStageMask = waitStages;
-
-  // Submit BOTH command buffers (scene and ImGui)
-  std::array<VkCommandBuffer, 2> cmdBuffers = {
-      commandBuffers.command(imageIndex),
-      interface.command(imageIndex)
-  };
-  submitInfo.commandBufferCount = static_cast<uint32_t>(cmdBuffers.size());
-  submitInfo.pCommandBuffers = cmdBuffers.data();
-
-  VkSemaphore signalSemaphores[] = {syncObjects.renderFinished(imageIndex)};
-  submitInfo.signalSemaphoreCount = 1;
-  submitInfo.pSignalSemaphores = signalSemaphores;
-
-  vkResetFences(device.logical(), 1, &syncObjects.inFlightFence(currentFrame));
-
-  if (vkQueueSubmit(device.graphicsQueue(), 1, &submitInfo,
-                    syncObjects.inFlightFence(currentFrame)) != VK_SUCCESS) {
-    throw std::runtime_error("failed to submit draw command buffer!");
-  }
-
-  // --- Present ---
-  VkPresentInfoKHR presentInfo{};
-  presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-
-  presentInfo.waitSemaphoreCount = 1;
-  presentInfo.pWaitSemaphores = signalSemaphores;
-
-  VkSwapchainKHR swapChains[] = {swapChain.handle()};
-  presentInfo.swapchainCount = 1;
-  presentInfo.pSwapchains = swapChains;
-
-  presentInfo.pImageIndices = &imageIndex;
-
-  result = vkQueuePresentKHR(device.presentQueue(), &presentInfo);
-  if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR ||
-      framebufferResized) {
-    recreateSwapChain(framebufferResized);
-    syncObjects.recreate(swapChain.numImages());
-    framebufferResized = false;
-  } else if (result != VK_SUCCESS) {
-    throw std::runtime_error("Failed to present swap chain image");
-  }
-
-  currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+void Application::mainLoop()
+{
 }
 
-void Application::drawImGui() {
-  // Start the Dear ImGui frame
-  ImGui_ImplVulkan_NewFrame();
-  ImGui_ImplGlfw_NewFrame();
-  ImGui::NewFrame();
 
-// --- NEW MATERIAL EDITOR ---
+void Application::drawFrame(bool& framebufferResized)
+{
+    vkWaitForFences(device.logical(), 1, &syncObjects.inFlightFence(currentFrame),
+                    VK_TRUE, UINT64_MAX);
+
+    uint32_t imageIndex;
+    VkResult result = vkAcquireNextImageKHR(
+        device.logical(), swapChain.handle(), UINT64_MAX,
+        syncObjects.imageAvailable(currentFrame), VK_NULL_HANDLE, &imageIndex);
+
+    if (result == VK_ERROR_OUT_OF_DATE_KHR)
+    {
+        recreateSwapChain(framebufferResized);
+        return;
+    }
+    else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
+    {
+        throw std::runtime_error("Failed to acquire swapchain image");
+    }
+
+    // Update all UBOs with fresh data for this frame
+    // *before* we record the command buffer.
+    updateUBOs(currentFrame);
+
+    if (syncObjects.imageInFlight(imageIndex) != VK_NULL_HANDLE)
+    {
+        vkWaitForFences(device.logical(), 1, &syncObjects.imageInFlight(imageIndex),
+                        VK_TRUE, UINT64_MAX);
+    }
+    syncObjects.imageInFlight(imageIndex) =
+        syncObjects.inFlightFence(currentFrame);
+
+    // --- Record the command buffers ---
+    // (This will now read the UBO data we just wrote)
+    commandBuffers.recordCommands(imageIndex); // Your BasicCommandBuffers
+    interface.recordCommandBuffers(imageIndex); // ImGui
+
+    // --- Submit ---
+    VkSubmitInfo submitInfo{};
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+    VkSemaphore waitSemaphores[] = {syncObjects.imageAvailable(currentFrame)};
+    VkPipelineStageFlags waitStages[] = {
+        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT
+    };
+    submitInfo.waitSemaphoreCount = 1;
+    submitInfo.pWaitSemaphores = waitSemaphores;
+    submitInfo.pWaitDstStageMask = waitStages;
+
+    // Submit BOTH command buffers (scene and ImGui)
+    std::array<VkCommandBuffer, 2> cmdBuffers = {
+        commandBuffers.command(imageIndex),
+        interface.command(imageIndex)
+    };
+    submitInfo.commandBufferCount = static_cast<uint32_t>(cmdBuffers.size());
+    submitInfo.pCommandBuffers = cmdBuffers.data();
+
+    VkSemaphore signalSemaphores[] = {syncObjects.renderFinished(imageIndex)};
+    submitInfo.signalSemaphoreCount = 1;
+    submitInfo.pSignalSemaphores = signalSemaphores;
+
+    vkResetFences(device.logical(), 1, &syncObjects.inFlightFence(currentFrame));
+
+    if (vkQueueSubmit(device.graphicsQueue(), 1, &submitInfo,
+                      syncObjects.inFlightFence(currentFrame)) != VK_SUCCESS)
+    {
+        throw std::runtime_error("failed to submit draw command buffer!");
+    }
+
+    // --- Present ---
+    VkPresentInfoKHR presentInfo{};
+    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+
+    presentInfo.waitSemaphoreCount = 1;
+    presentInfo.pWaitSemaphores = signalSemaphores;
+
+    VkSwapchainKHR swapChains[] = {swapChain.handle()};
+    presentInfo.swapchainCount = 1;
+    presentInfo.pSwapchains = swapChains;
+
+    presentInfo.pImageIndices = &imageIndex;
+
+    result = vkQueuePresentKHR(device.presentQueue(), &presentInfo);
+    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR ||
+        framebufferResized)
+    {
+        recreateSwapChain(framebufferResized);
+        syncObjects.recreate(swapChain.numImages());
+        framebufferResized = false;
+    }
+    else if (result != VK_SUCCESS)
+    {
+        throw std::runtime_error("Failed to present swap chain image");
+    }
+
+    currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+}
+
+void Application::drawImGui()
+{
+    // Start the Dear ImGui frame
+    ImGui_ImplVulkan_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+
+    // --- NEW MATERIAL EDITOR ---
     ImGui::Begin("Material Editor");
 
     // We get a reference to the application's map of materials
     // (This assumes m_materials is std::map<std::string, vks::Material>)
-    for (auto& pair : m_materials) {
+    for (auto& pair : m_materials)
+    {
         auto materialName = pair.first;
         vks::Material& material = pair.second;
 
         // Create a collapsible "tree node" for each material
-        if (ImGui::TreeNode(materialName.c_str())) {
-
+        if (ImGui::TreeNode(materialName.c_str()))
+        {
             // These widgets will return 'true' if they were changed
             bool changed = false;
 
@@ -299,7 +301,8 @@ void Application::drawImGui() {
             changed |= ImGui::ColorEdit4("Base Color", color);
 
             // If any widget was changed, update the material's UBO
-            if (changed) {
+            if (changed)
+            {
                 MaterialUBO newUbo{};
                 newUbo.color = {color[0], color[1], color[2], color[3]};
                 material.updateUBO(newUbo);
@@ -311,28 +314,32 @@ void Application::drawImGui() {
 
     ImGui::End(); // End Material Editor
 
-  ImGui::Render();
+    ImGui::Render();
 }
 
 // for resize window
-void Application::recreateSwapChain(bool &framebufferResized) {
-  framebufferResized = true;
+void Application::recreateSwapChain(bool& framebufferResized)
+{
+    framebufferResized = true;
 
-  glm::ivec2 size;
-  window.framebufferSize(size);
-  while (size[0] == 0 || size[1] == 0) {
+    glm::ivec2 size;
     window.framebufferSize(size);
-    glfwWaitEvents();
-  }
+    while (size[0] == 0 || size[1] == 0)
+    {
+        window.framebufferSize(size);
+        glfwWaitEvents();
+    }
 
-  vkDeviceWaitIdle(device.logical());
+    vkDeviceWaitIdle(device.logical());
 
-  swapChain.recreate();
-  renderPass.recreate();
-  graphicsPipeline.recreate(); // Recreates all pipeline "recipes"
-  commandBuffers.recreate();   // Re-allocates the command buffers
-  interface.recreate();
+    swapChain.recreate();
+    renderPass.recreate();
+    graphicsPipeline.recreate(); // Recreates all pipeline "recipes"
+    commandBuffers.recreate(); // Re-allocates the command buffers
+    interface.recreate();
 
-  renderPass.cleanupOld();
-  swapChain.cleanupOld();
+    renderPass.cleanupOld();
+    swapChain.cleanupOld();
+
+    camera.setAspect(swapChain.extent().width / (float)swapChain.extent().height);
 }

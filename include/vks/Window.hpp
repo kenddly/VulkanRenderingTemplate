@@ -38,7 +38,7 @@ public:
     glfwGetFramebufferSize(m_window, &size[0], &size[1]);
   }
 
-  inline void setDrawFrameFunc(const std::function<void(bool &)> &func) {
+  inline void setDrawFrameFunc(const std::function<void(bool &, float deltaTime)> &func) {
     m_drawFrameFunc = func;
   }
 
@@ -57,7 +57,7 @@ private:
   VkSurfaceKHR m_surface;
 
   bool m_framebufferResized;
-  std::function<void(bool &)> m_drawFrameFunc;
+  std::function<void(bool &, float deltaTime)> m_drawFrameFunc;
 
   static void FramebufferResizeCallback(GLFWwindow *window, int width,
                                         int height);

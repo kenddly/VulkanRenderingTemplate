@@ -2,7 +2,6 @@
 
 #include <vks/Instance.hpp>
 
-#include <exception>
 #include <iostream>
 
 using namespace vks;
@@ -11,7 +10,7 @@ Window::Window(const glm::ivec2 &dimensions, const std::string &title,
                const Instance &instance)
     : m_dimensions(dimensions), m_title(title), m_instance(instance),
       m_surface(VK_NULL_HANDLE), m_framebufferResized(true),
-      m_drawFrameFunc([](bool &) {}) {
+      m_drawFrameFunc([](bool &, float) {}) {
   m_window = glfwCreateWindow(dimensions.x, dimensions.y, title.c_str(),
                               nullptr, nullptr);
   glfwSetWindowUserPointer(m_window, this);
@@ -32,9 +31,17 @@ Window::~Window() {
 }
 
 void Window::mainLoop() {
+  float lastTime = static_cast<float>(glfwGetTime());
+
   while (!glfwWindowShouldClose(m_window)) {
     glfwPollEvents();
-    m_drawFrameFunc(m_framebufferResized);
+
+    // Update time
+    float currentTime = static_cast<float>(glfwGetTime());
+    float deltaTime = currentTime - lastTime;
+    lastTime = currentTime;
+
+    m_drawFrameFunc(m_framebufferResized, deltaTime);
     m_input.update();
   }
 }

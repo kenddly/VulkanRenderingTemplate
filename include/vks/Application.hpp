@@ -1,15 +1,5 @@
 #pragma once
 
-#include <algorithm>
-#include <array>
-#include <cstdint>
-#include <cstdlib>
-#include <cstring>
-#include <fstream>
-#include <iostream>
-#include <optional>
-#include <set>
-#include <stdexcept>
 #include <vector>
 
 #define GLFW_INCLUDE_VULKAN
@@ -32,6 +22,7 @@
 #include <vks/Model.hpp>
 #include <vks/Material.hpp>
 #include <vks/Descriptors.hpp>
+#include <vks/Camera.hpp>
 
 
 namespace vks
@@ -50,13 +41,6 @@ namespace vks
             uint64_t materialKey = (uint64_t)material->getDescriptorSet();
             return (pipelineKey << 32) | materialKey;
         }
-    };
-
-    // UBO for camera (matches sphere_mesh.vert, Set 0)
-    struct CameraUBO
-    {
-        glm::mat4 view;
-        glm::mat4 proj;
     };
 
 
@@ -111,6 +95,8 @@ namespace vks
         BasicCommandBuffers commandBuffers;
         SyncObjects syncObjects;
         ImGuiApp interface; // Your ImGui class
+
+        Camera camera;
 
         int currentFrame = 0;
 
