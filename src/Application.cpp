@@ -164,6 +164,11 @@ void Application::run() {
     {
         drawImGui();
         drawFrame(framebufferResized);
+
+        if (window.input().isKeyPressed(GLFW_KEY_SPACE))
+        {
+            std::cout << "Space key pressed!" << std::endl;
+        }
     });
 
     window.mainLoop();

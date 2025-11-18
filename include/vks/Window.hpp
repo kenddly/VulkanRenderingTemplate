@@ -11,6 +11,8 @@
 
 #include <NonCopyable.hpp>
 
+#include <vks/Input.hpp>
+
 namespace vks {
 
 class Instance;
@@ -40,10 +42,13 @@ public:
     m_drawFrameFunc = func;
   }
 
+  vks::Input& input() { return m_input; }
+
   static void GetRequiredExtensions(std::vector<const char *> &out);
 
 private:
   GLFWwindow *m_window;
+  Input m_input{};
 
   glm::ivec2 m_dimensions;
   std::string m_title;

@@ -21,6 +21,9 @@ Window::Window(const glm::ivec2 &dimensions, const std::string &title,
                               &m_surface) != VK_SUCCESS) {
     throw std::runtime_error("Unable to create window surface");
   }
+
+  // Attach input system
+  m_input.attachToWindow(m_window);
 }
 
 Window::~Window() {
@@ -32,6 +35,7 @@ void Window::mainLoop() {
   while (!glfwWindowShouldClose(m_window)) {
     glfwPollEvents();
     m_drawFrameFunc(m_framebufferResized);
+    m_input.update();
   }
 }
 
