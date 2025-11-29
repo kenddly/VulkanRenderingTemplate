@@ -13,3 +13,5 @@ imgui.ini
 venv/
 CMakeFiles/
 CMakeCache.txt
+/.idea
+/bindings
