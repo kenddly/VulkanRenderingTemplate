@@ -11,6 +11,9 @@ Window::Window(const glm::ivec2& dimensions, const std::string& title,
     : m_dimensions(dimensions), m_title(title), m_instance(instance),
     m_surface(VK_NULL_HANDLE), m_framebufferResized(true),
     m_drawFrameFunc([](bool&, float) {}) {
+
+    m_windowInstance = this;
+    
     m_window = glfwCreateWindow(dimensions.x, dimensions.y, title.c_str(),
         nullptr, nullptr);
     glfwSetWindowUserPointer(m_window, this);
@@ -59,17 +62,18 @@ void Window::GetRequiredExtensions(std::vector<const char*>& out) {
     out.assign(glfwExtensions, glfwExtensions + glfwExtensionCount);
 }
 
-void Window::FramebufferResizeCallback(GLFWwindow* window, int width,
-    int height) {
+Window* Window::GetInstance()
+{
+    return m_windowInstance;
+}
+
+void Window::FramebufferResizeCallback(GLFWwindow* window, int width, int height)
+{
     if (!window) return;
 
     // Get the Window instance safely
     void* ptr = glfwGetWindowUserPointer(window);
     if (!ptr) return; // user pointer cleared or not set yet
 
-    Window* win = reinterpret_cast<Window*>(ptr);
-    // Ignore zero-sized framebuffers (minimized window)
-    if (width == 0 || height == 0) return;
-
-    win->m_framebufferResized = true;
+    Window::GetInstance()->m_framebufferResized = true;
 }

@@ -47,6 +47,7 @@ public:
   static void GetRequiredExtensions(std::vector<const char *> &out);
 
 private:
+  inline static Window* m_windowInstance = nullptr;
   GLFWwindow *m_window;
   Input m_input{};
 
@@ -59,6 +60,7 @@ private:
   bool m_framebufferResized;
   std::function<void(bool &, float deltaTime)> m_drawFrameFunc;
 
+  static Window* GetInstance();
   static void FramebufferResizeCallback(GLFWwindow *window, int width,
                                         int height);
 };

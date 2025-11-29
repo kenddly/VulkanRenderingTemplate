@@ -144,6 +144,11 @@ void Application::run()
 {
     window.setDrawFrameFunc([this](bool& framebufferResized, float deltaTime)
     {
+        if (framebufferResized)
+        {
+            std::cout << "Resized!" << std::endl;
+        }
+
         drawImGui();
         drawFrame(framebufferResized);
 
