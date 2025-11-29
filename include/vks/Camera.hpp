@@ -35,7 +35,11 @@ public:
 
         // Mouse look
         glm::vec2 delta = m_input->mouseDelta();
-        if (m_input->isMouseHeld(GLFW_MOUSE_BUTTON_RIGHT)) {
+        
+        if (m_input->isMousePressed(Input::MouseButton::RIGHT))
+            m_input->setCursorState(Input::CursorState::DISABLED);
+        
+        if (m_input->isMouseHeld(Input::MouseButton::RIGHT)) {
             m_yaw   -= delta.x * mouseSensitivity;
             m_pitch -= delta.y * mouseSensitivity;
 
@@ -44,18 +48,24 @@ public:
             m_pitch = glm::clamp(m_pitch, -limit, limit);
         }
 
+        if (m_input->isMouseReleased(Input::MouseButton::RIGHT))
+            m_input->setCursorState(Input::CursorState::NORMAL);
+
         // Movement controls
         glm::vec3 f = forward();
         glm::vec3 r = right();
         glm::vec3 u = up();   // Z-up
 
-        if (m_input->isKeyHeld(GLFW_KEY_W)) position += f * speed * dt;
-        if (m_input->isKeyHeld(GLFW_KEY_S)) position -= f * speed * dt;
-        if (m_input->isKeyHeld(GLFW_KEY_D)) position += r * speed * dt;
-        if (m_input->isKeyHeld(GLFW_KEY_A)) position -= r * speed * dt;
+        float currentSpeed = speed;
+        if (m_input->isKeyHeld(GLFW_KEY_LEFT_SHIFT)) currentSpeed = speed * 5.0f;
 
-        if (m_input->isKeyHeld(GLFW_KEY_E)) position += u * speed * dt;
-        if (m_input->isKeyHeld(GLFW_KEY_Q)) position -= u * speed * dt;
+        if (m_input->isKeyHeld(GLFW_KEY_W)) position += f * currentSpeed * dt;
+        if (m_input->isKeyHeld(GLFW_KEY_S)) position -= f * currentSpeed * dt;
+        if (m_input->isKeyHeld(GLFW_KEY_D)) position += r * currentSpeed * dt;
+        if (m_input->isKeyHeld(GLFW_KEY_A)) position -= r * currentSpeed * dt;
+
+        if (m_input->isKeyHeld(GLFW_KEY_E)) position += u * currentSpeed * dt;
+        if (m_input->isKeyHeld(GLFW_KEY_Q)) position -= u * currentSpeed * dt;
 
         updateMatrices();
     }

@@ -26,6 +26,8 @@ public:
   inline const VkQueue &graphicsQueue() const { return m_graphicsQueue; }
   inline const VkQueue &presentQueue() const { return m_presentQueue; }
 
+  uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) const;
+
 private:
   VkPhysicalDevice m_physical;
   VkDevice m_logical;

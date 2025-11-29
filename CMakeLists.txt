@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-# write the cmakebinarydir to std
+# write the cmake binary dir to std
 message(STATUS "CMAKE_BINARY_DIR: ${CMAKE_BINARY_DIR}")
 
 if(EXISTS "${CMAKE_BINARY_DIR}/generators/conan_toolchain.cmake")

@@ -33,7 +33,7 @@ protected:
   const SwapChain &m_swapChain;
 
   virtual void createRenderPass() = 0;
-  void createFrameBuffers();
+  virtual void createFrameBuffers() = 0;
 
   void destroyFrameBuffers();
 };

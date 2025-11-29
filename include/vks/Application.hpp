@@ -23,10 +23,13 @@
 #include <vks/Material.hpp>
 #include <vks/Descriptors.hpp>
 #include <vks/Camera.hpp>
+#include <vks/AssetManager.hpp>
 
 
 namespace vks
 {
+
+
     // A struct to define a "thing" in your scene
     // (This is from your Application.hpp (Updated) file)
     struct RenderObject
@@ -81,6 +84,7 @@ namespace vks
 
         // Static Application Instance
         inline static Application* m_app = nullptr;
+        AssetManager m_assets;
 
         // --- Core Vulkan Objects ---
         // (These are from your original constructor)
@@ -103,7 +107,8 @@ namespace vks
         // --- New Asset Registries ---
         Ref<vks::DescriptorPool> m_globalDescriptorPool;
         std::map<std::string, vks::Model> m_models;
-        std::map<std::string, vks::Material> m_materials;
+
+        std::vector<Material> m_materials;
 
         // --- New Scene Data ---
         std::vector<RenderObject> m_renderObjects;

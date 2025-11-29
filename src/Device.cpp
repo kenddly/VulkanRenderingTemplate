@@ -73,6 +73,24 @@ Device::Device(const Instance &instance, const Window &window,
 
 Device::~Device() { vkDestroyDevice(m_logical, nullptr); }
 
+uint32_t Device::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) const
+{
+  // Query available memory types on the physical device
+  VkPhysicalDeviceMemoryProperties memProperties;
+  vkGetPhysicalDeviceMemoryProperties(m_physical, &memProperties);
+
+  for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
+    // 1. Check if the memory type is allowed by the buffer/image requirements (typeFilter)
+    // 2. Check if the memory type supports the properties we need (e.g., Host Visible, Device Local)
+    if ((typeFilter & (1 << i)) &&
+       (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
+      return i;
+       }
+  }
+
+  throw std::runtime_error("failed to find suitable memory type!");
+}
+
 bool Device::CheckDeviceExtensionSupport(
     const VkPhysicalDevice &device,
     const std::vector<const char *> &extensions) {

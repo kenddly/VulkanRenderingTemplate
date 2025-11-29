@@ -78,10 +78,6 @@ public:
      */
     ~Material() = default; // m_uboBuffer is a unique_ptr, so it cleans itself up.
 
-    // Materials are unique: delete copy operations
-    Material(const Material&) = delete;
-    Material& operator=(const Material&) = delete;
-
     // Materials can be moved (e.g., when placing them into a std::map)
     Material(Material&& other) = default;
     Material& operator=(Material&& other) = default;

@@ -37,6 +37,23 @@ vks::Application::Application()
 
     // Now that all core systems are up, load assets
     loadAssets();
+
+    m_materials.push_back(
+        Material(
+            device,
+            graphicsPipeline,
+            m_globalDescriptorPool,
+            "sphere",
+            glm::vec4{1.0f, 0.0f, 0.0f, 1.0f}));
+
+    m_materials.push_back(
+        Material(
+            device,
+            graphicsPipeline,
+            m_globalDescriptorPool,
+            "sphere", // The name of the pipeline to use
+            glm::vec4{0.0f, 122.0f / 255.0f, 1.0f, 1.0f} // Blue
+        ));
     buildScene();
 
     camera.init(&window.input(), swapChain.extent().width / (float)swapChain.extent().height);
@@ -78,27 +95,6 @@ void Application::loadAssets()
     // This calls Model::createSphere, which uses your sphere generation code
     // and uploads it to the GPU.
     m_models["sphere"].createSphere(device, commandPool.handle(), 1.0f, 32, 16);
-
-    // 5. Create Materials
-    m_materials.emplace("red_sphere",
-                        vks::Material{
-                            device,
-                            graphicsPipeline,
-                            m_globalDescriptorPool,
-                            "sphere", // The name of the pipeline to use
-                            {1.0f, 15.0f / 255.0f, 0.0f, 1.0f} // Red
-                        }
-    );
-
-    m_materials.emplace("blue_sphere",
-                        vks::Material{
-                            device,
-                            graphicsPipeline,
-                            m_globalDescriptorPool,
-                            "sphere", // Same pipeline
-                            {0.0f, 0.2f, 0.8f, 1.0f} // Blue
-                        }
-    );
 }
 
 /**
@@ -109,14 +105,14 @@ void Application::buildScene()
     // Create a red sphere at (0, 0, 0)
     RenderObject redSphere;
     redSphere.model = &m_models.at("sphere"); // Use .at() to avoid default constructor
-    redSphere.material = &m_materials.at("red_sphere");
+    redSphere.material = &m_materials[0];
     redSphere.transform = glm::translate(glm::mat4(1.0f), {0.0f, 0.0f, 0.0f});
     m_renderObjects.push_back(redSphere);
 
     // Create a blue sphere at (2, 0, 0)
     RenderObject blueSphere;
     blueSphere.model = &m_models.at("sphere");
-    blueSphere.material = &m_materials.at("blue_sphere");
+    blueSphere.material = &m_materials[1];
     blueSphere.transform = glm::translate(glm::mat4(1.0f), {2.0f, 0.0f, 0.0f});
     m_renderObjects.push_back(blueSphere);
 }
@@ -278,14 +274,10 @@ void Application::drawImGui()
     ImGui::Begin("Material Editor");
 
     // We get a reference to the application's map of materials
-    // (This assumes m_materials is std::map<std::string, vks::Material>)
-    for (auto& pair : m_materials)
+    for (auto& material : m_materials)
     {
-        auto materialName = pair.first;
-        vks::Material& material = pair.second;
-
         // Create a collapsible "tree node" for each material
-        if (ImGui::TreeNode(materialName.c_str()))
+        if (ImGui::TreeNode(material.getPipelineName().c_str()))
         {
             // These widgets will return 'true' if they were changed
             bool changed = false;
@@ -334,8 +326,8 @@ void Application::recreateSwapChain(bool& framebufferResized)
 
     swapChain.recreate();
     renderPass.recreate();
-    graphicsPipeline.recreate(); // Recreates all pipeline "recipes"
-    commandBuffers.recreate(); // Re-allocates the command buffers
+    graphicsPipeline.recreate();
+    commandBuffers.recreate();
     interface.recreate();
 
     renderPass.cleanupOld();

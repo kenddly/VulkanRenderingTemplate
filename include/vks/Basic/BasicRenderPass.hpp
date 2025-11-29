@@ -11,7 +11,8 @@ public:
   BasicRenderPass(const Device &device, const SwapChain &swapChain);
 
 private:
-  void createRenderPass();
+  void createRenderPass() override;
+  void createFrameBuffers() override;
 };
 } // namespace vks
 

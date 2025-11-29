@@ -26,6 +26,7 @@ public:
 
   inline const VkSwapchainKHR &handle() const { return m_swapChain; }
   inline const VkFormat &imageFormat() const { return m_imageFormat; }
+  inline const VkFormat &depthFormat() const { return m_depthFormat; }
   inline const VkExtent2D &extent() const { return m_extent; }
   inline size_t numImages() const { return m_images.size(); }
   inline size_t numImageViews() const { return m_imageViews.size(); }
@@ -35,6 +36,10 @@ public:
   }
   inline VkImageView imageView(uint32_t index) const {
     return m_imageViews[index];
+  }
+
+  inline VkImageView depthView(uint32_t index) const {
+    return m_depthViews[index];
   }
 
   static SwapChainSupportDetails
@@ -52,20 +57,29 @@ private:
   VkSwapchainKHR m_swapChain;
   VkSwapchainKHR m_oldSwapChain;
 
-  // Swap chain image handles
+  // Swap chain image and depth handles
   std::vector<VkImage> m_images;
   std::vector<VkImageView> m_imageViews;
 
+  std::vector<VkImage> m_depthImages;
+  std::vector<VkImageView> m_depthViews;
+  std::vector<VkDeviceMemory> m_depthImageMemories;
+
   VkFormat m_imageFormat;
+  VkFormat m_depthFormat;
+
   VkExtent2D m_extent;
 
   void createSwapChain();
   void createImageViews();
+  void createDepthViews();
 
-  void destroyImageViews();
+  void destroyImages();
+  void destroyDepthViews();
 
   static VkSurfaceFormatKHR ChooseSwapSurfaceFormat(
       const std::vector<VkSurfaceFormatKHR> &availableFormats);
+  static VkFormat ChooseSwapDepthFormat(VkPhysicalDevice device);
   static VkPresentModeKHR ChooseSwapPresentMode(
       const std::vector<VkPresentModeKHR> &availablePresentModes);
 };

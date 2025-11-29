@@ -68,3 +68,31 @@ void ImGuiRenderPass::createRenderPass() {
     throw std::runtime_error("Render pass creation failed");
   }
 }
+
+void ImGuiRenderPass::createFrameBuffers()
+{
+    size_t numImages = m_swapChain.numImages();
+    m_frameBuffers.resize(numImages);
+
+    for (size_t i = 0; i < numImages; i++)
+    {
+        VkImageView attachments[] = {
+            m_swapChain.imageView(i)
+        };
+
+        VkFramebufferCreateInfo framebufferInfo = {};
+        framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        framebufferInfo.renderPass = m_renderPass;
+        framebufferInfo.attachmentCount = 1;
+        framebufferInfo.pAttachments = attachments;
+        framebufferInfo.width = m_swapChain.extent().width;
+        framebufferInfo.height = m_swapChain.extent().height;
+        framebufferInfo.layers = 1;
+
+        if (vkCreateFramebuffer(m_device.logical(), &framebufferInfo, nullptr,
+                                &m_frameBuffers[i]) != VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to create framebuffer!");
+        }
+    }
+}

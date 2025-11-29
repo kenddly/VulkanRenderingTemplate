@@ -24,6 +24,18 @@ public:
         bool held = false;
     };
 
+    enum CursorState {
+        NORMAL = GLFW_CURSOR_NORMAL,
+        HIDDEN = GLFW_CURSOR_HIDDEN,
+        DISABLED = GLFW_CURSOR_DISABLED
+    };
+
+    enum class MouseButton {
+        LEFT   = GLFW_MOUSE_BUTTON_LEFT,
+        RIGHT  = GLFW_MOUSE_BUTTON_RIGHT,
+        MIDDLE = GLFW_MOUSE_BUTTON_MIDDLE
+    };
+
     // ---- PUBLIC API -------------------------------------------------------------------
 
     void update(); // call once per frame (clears pressed/released states)
@@ -32,13 +44,16 @@ public:
     bool isKeyReleased(int key) const   { try {return keys.at(key).released; } catch (std::exception _) { return false; }}
     bool isKeyHeld(int key) const       { try {return keys.at(key).held; } catch (std::exception _) { return false; }}
 
-    bool isMousePressed(int btn) const  { try {return mouseButtons.at(btn).pressed; } catch (std::exception _) { return false; }}
-    bool isMouseReleased(int btn) const { try {return mouseButtons.at(btn).released; } catch (std::exception _) { return false; }}
-    bool isMouseHeld(int btn) const     { try {return mouseButtons.at(btn).held; } catch (std::exception _) { return false; }}
+    bool isMousePressed(MouseButton btn) const  { try {return mouseButtons.at(btn).pressed; } catch (std::exception _) { return false; }}
+    bool isMouseReleased(MouseButton btn) const { try {return mouseButtons.at(btn).released; } catch (std::exception _) { return false; }}
+    bool isMouseHeld(MouseButton btn) const     { try {return mouseButtons.at(btn).held; } catch (std::exception _) { return false; }}
 
     glm::vec2 mousePos() const { return m_mousePos; }
     glm::vec2 mouseDelta() const { return m_mouseDelta; }
     glm::vec2 scrollDelta() const { return m_scrollDelta; }
+
+    // Set cursor state (NORMAL, HIDDEN, DISABLED)
+    void setCursorState(CursorState state);
 
     // ---- CALLBACKS THAT USER CAN BIND -------------------------------------------------
     std::function<void(int, int)> onKeyChanged;             // key, action
@@ -60,7 +75,7 @@ private:
 
 private:
     std::unordered_map<int, KeyState> keys;
-    std::unordered_map<int, MouseButtonState> mouseButtons;
+    std::unordered_map<MouseButton, MouseButtonState> mouseButtons;
 
     glm::vec2 m_mousePos = {0, 0};
     glm::vec2 m_mouseLastPos = {0, 0};

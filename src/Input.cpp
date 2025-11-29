@@ -28,6 +28,12 @@ void Input::update() {
     m_scrollDelta = glm::vec2(0);
 }
 
+void Input::setCursorState(CursorState state) {
+    if (m_window) {
+        glfwSetInputMode(m_window, GLFW_CURSOR, state);
+    }
+}
+
 // ----------------------- Static Callbacks ------------------------------
 
 void Input::KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -53,7 +59,8 @@ void Input::MouseButtonCallback(GLFWwindow* window, int button, int action, int 
     auto* input = static_cast<Input*>(glfwGetWindowUserPointer(window));
     if (!input) return;
 
-    auto& s = input->mouseButtons[button];
+    
+    auto& s = input->mouseButtons[static_cast<MouseButton>(button)];
 
     if (action == GLFW_PRESS) {
         s.pressed = true;

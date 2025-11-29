@@ -23,13 +23,6 @@ namespace vks
         Model() = default;
         ~Model() = default;
 
-        void Model::createSphere(
-            const vks::Device& device,
-            VkCommandPool commandPool,
-            float radius,
-            uint32_t sectors,
-            uint32_t stacks);
-
         // Models are unique assets, so delete copy operations.
         Model(const Model&) = delete;
         Model& operator=(const Model&) = delete;
@@ -37,6 +30,13 @@ namespace vks
         // Models can be moved (e.g., when placing in a std::map)
         Model(Model&&) = default;
         Model& operator=(Model&&) = default;
+
+        void createSphere(
+            const vks::Device& device,
+            VkCommandPool commandPool,
+            float radius,
+            uint32_t sectors,
+            uint32_t stacks);
 
         // --- Getters for the Render Loop ---
         VkBuffer getVertexBuffer() const { return m_vertexBuffer->getBuffer(); }
