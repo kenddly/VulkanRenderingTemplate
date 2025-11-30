@@ -81,6 +81,20 @@ void BasicCommandBuffers::recordCommands(uint32_t imageIndex)
 
     vkCmdBeginRenderPass(cmdBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
+    VkViewport viewport{};
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
+    viewport.width = static_cast<float>(m_swapChain.extent().width);
+    viewport.height = static_cast<float>(m_swapChain.extent().height);
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    vkCmdSetViewport(cmdBuffer, 0, 1, &viewport);
+
+    VkRect2D scissor{};
+    scissor.offset = {0, 0};
+    scissor.extent = m_swapChain.extent();
+    vkCmdSetScissor(cmdBuffer, 0, 1, &scissor);
+
     // Get Scene Data
     auto renderObjects = m_app.getRenderObjects();
     VkDescriptorSet cameraSet = m_app.getCameraDescriptorSet();
@@ -124,7 +138,7 @@ void BasicCommandBuffers::recordCommands(uint32_t imageIndex)
             if (cameraSet != VK_NULL_HANDLE)
             {
                 vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                    layout, 0, 1, &cameraSet, 0, nullptr);
+                                        layout, 0, 1, &cameraSet, 0, nullptr);
             }
         }
 
