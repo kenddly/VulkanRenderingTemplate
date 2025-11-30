@@ -37,6 +37,7 @@ Device::Device(const Instance &instance, const Window &window,
   }
 
   VkPhysicalDeviceFeatures deviceFeatures = {};
+  deviceFeatures.wideLines = VK_TRUE;
 
   // Setup logical device
   VkDeviceCreateInfo createInfo = {};

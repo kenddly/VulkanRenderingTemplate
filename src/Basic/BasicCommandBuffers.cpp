@@ -7,9 +7,9 @@
 using namespace vks;
 
 BasicCommandBuffers::BasicCommandBuffers(
-    const Device &device, const RenderPass &renderPass,
-    const SwapChain &swapChain, const GraphicsPipeline &graphicsPipeline,
-    const CommandPool &commandPool,
+    const Device& device, const RenderPass& renderPass,
+    const SwapChain& swapChain, const GraphicsPipeline& graphicsPipeline,
+    const CommandPool& commandPool,
     Application& application // <-- ADD THIS
 )
     : CommandBuffers(device, renderPass, swapChain, graphicsPipeline, commandPool),
@@ -18,7 +18,8 @@ BasicCommandBuffers::BasicCommandBuffers(
     BasicCommandBuffers::createCommandBuffers();
 }
 
-void BasicCommandBuffers::recreate() {
+void BasicCommandBuffers::recreate()
+{
     destroyCommandBuffers();
     createCommandBuffers();
 }
@@ -40,18 +41,27 @@ void BasicCommandBuffers::createCommandBuffers()
     }
 }
 
+struct PushData
+{
+    glm::vec4 camPosition;
+    glm::vec4 color;
+    glm::vec3 settings;
+};
+
 
 /**
  * @brief This is the new "cooking" function that renders your scene.
  * It is called every frame from Application::drawFrame.
  */
-void BasicCommandBuffers::recordCommands(uint32_t imageIndex) {
+void BasicCommandBuffers::recordCommands(uint32_t imageIndex)
+{
     VkCommandBuffer cmdBuffer = m_commandBuffers[imageIndex];
 
     VkCommandBufferBeginInfo beginInfo{};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
-    if (vkBeginCommandBuffer(cmdBuffer, &beginInfo) != VK_SUCCESS) {
+    if (vkBeginCommandBuffer(cmdBuffer, &beginInfo) != VK_SUCCESS)
+    {
         throw std::runtime_error("failed to begin recording command buffer!");
     }
 
@@ -71,84 +81,67 @@ void BasicCommandBuffers::recordCommands(uint32_t imageIndex) {
 
     vkCmdBeginRenderPass(cmdBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-    // 1. Get the scene data from the application
-    auto renderObjects = m_app.getRenderObjects(); // Gets a copy
+    // Get Scene Data
+    auto renderObjects = m_app.getRenderObjects();
     VkDescriptorSet cameraSet = m_app.getCameraDescriptorSet();
+    const auto& camera = m_app.getCamera(); // Need this for Grid
 
-    // 2. Sort the render objects for efficient binding
+    // Sort (Optimization)
     std::sort(renderObjects.begin(), renderObjects.end(),
-        [](const RenderObject& a, const RenderObject& b) {
-            return a.getSortKey() < b.getSortKey();
-    });
+              [](const RenderObject& a, const RenderObject& b)
+              {
+                  return a.getSortKey() < b.getSortKey();
+              });
 
-    // 3. Bind the "global" camera descriptor set (Set 0) ONCE
-    if (cameraSet != VK_NULL_HANDLE && !renderObjects.empty()) {
-        // We can safely get the layout from the first renderable object
-        // (This assumes all scene objects use a compatible layout for Set 0)
+    // Bind Global Camera Set (Set 0)
+    if (cameraSet != VK_NULL_HANDLE && !renderObjects.empty())
+    {
         auto layoutName = renderObjects[0].material->getPipelineName();
         auto layout = m_graphicsPipeline.getLayout(layoutName);
         vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-            layout, 0, 1, &cameraSet, 0, nullptr);
+                                layout, 0, 1, &cameraSet, 0, nullptr);
     }
 
-    // 4. Loop through the sorted objects and render them
+    // Render Loop
     VkPipeline lastPipeline = VK_NULL_HANDLE;
     VkPipelineLayout lastLayout = VK_NULL_HANDLE;
     VkDescriptorSet lastMaterialSet = VK_NULL_HANDLE;
 
-    for (const auto& obj : renderObjects) {
+    for (const auto& obj : renderObjects)
+    {
         auto pipelineName = obj.material->getPipelineName();
         VkPipeline pipeline = m_graphicsPipeline.getPipeline(pipelineName);
         VkPipelineLayout layout = m_graphicsPipeline.getLayout(pipelineName);
 
-        // --- Bind Pipeline (if different) ---
-        if (pipeline != lastPipeline) {
+        // --- Bind Pipeline (If Changed) ---
+        if (pipeline != lastPipeline)
+        {
             vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
             lastPipeline = pipeline;
             lastLayout = layout;
 
-            // Re-bind global set if layout changed
-             if (cameraSet != VK_NULL_HANDLE) {
+            // Re-bind global set if layout changed (Vulkan requirement)
+            if (cameraSet != VK_NULL_HANDLE)
+            {
                 vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                     layout, 0, 1, &cameraSet, 0, nullptr);
             }
         }
 
-        // --- Bind Material (Set 1) (if different) ---
-        VkDescriptorSet materialSet = obj.material->getDescriptorSet();
-        if (materialSet != lastMaterialSet && materialSet != VK_NULL_HANDLE) {
-            vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                layout, 1, 1, &materialSet, 0, nullptr);
-            lastMaterialSet = materialSet;
-        }
-
-        // --- Bind Instance Data (Push Constants) ---
-        // (Only if the layout has push constants)
-        if(obj.model != nullptr) { // Simple check
-            vkCmdPushConstants(cmdBuffer, layout, VK_SHADER_STAGE_VERTEX_BIT,
-                               0, sizeof(glm::mat4), &obj.transform);
-        }
-
-        // --- Bind Geometry & Draw ---
-        if (obj.model != nullptr) {
-            VkBuffer vertexBuffers[] = { obj.model->getVertexBuffer() };
-            VkDeviceSize offsets[] = {0};
-            vkCmdBindVertexBuffers(cmdBuffer, 0, 1, vertexBuffers, offsets);
-
-            vkCmdBindIndexBuffer(cmdBuffer, obj.model->getIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
-
-            vkCmdDrawIndexed(cmdBuffer, obj.model->getIndexCount(), 1, 0, 0, 0);
-
-        } else {
-            // This is for pipelines with no vertex input, like "base"
-            vkCmdDraw(cmdBuffer, 3, 1, 0, 0);
-        }
+        obj.material->draw(
+            cmdBuffer,
+            layout,
+            lastMaterialSet, // Passed by reference so material can update cache
+            obj.model,
+            obj.transform,
+            camera
+        );
     }
-    // --- End of new loop ---
 
     vkCmdEndRenderPass(cmdBuffer);
 
-    if (vkEndCommandBuffer(cmdBuffer) != VK_SUCCESS) {
+    if (vkEndCommandBuffer(cmdBuffer) != VK_SUCCESS)
+    {
         throw std::runtime_error("failed to record command buffer!");
     }
 }

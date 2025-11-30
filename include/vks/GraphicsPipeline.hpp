@@ -88,6 +88,11 @@ private:
     void createSpherePipeline();
 
     /**
+     * @brief Creates the "grid" pipeline (for grid rendering).
+     */
+    void createGridPipeline();
+
+    /**
      * @brief Helper to create a shader module from byte code.
      */
     VkShaderModule createShaderModule(const std::vector<unsigned char> &code);

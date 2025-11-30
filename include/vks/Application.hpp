@@ -40,9 +40,7 @@ namespace vks
 
         uint64_t getSortKey() const
         {
-            uint64_t pipelineKey = (uint64_t)&material->getPipelineName();
-            uint64_t materialKey = (uint64_t)material->getDescriptorSet();
-            return (pipelineKey << 32) | materialKey;
+            return material->layer_priority;
         }
     };
 
@@ -51,7 +49,7 @@ namespace vks
     {
     public:
         Application();
-        ~Application() = default;
+        ~Application();
 
         void run();
         static Application& getInstance() { return *m_app; };
@@ -60,9 +58,9 @@ namespace vks
         const std::vector<RenderObject>& getRenderObjects() const { return m_renderObjects; }
         VkDescriptorSet getCameraDescriptorSet() const { return m_cameraDescriptorSet; }
         const CommandPool& getCommandPool() const { return commandPool; };
+        const Camera& getCamera() const { return camera; }
 
     private:
-        void mainLoop();
         void drawFrame(bool& framebufferResized);
         void drawImGui();
         void recreateSwapChain(bool& framebufferResized);
@@ -98,7 +96,7 @@ namespace vks
         GraphicsPipeline graphicsPipeline;
         BasicCommandBuffers commandBuffers;
         SyncObjects syncObjects;
-        ImGuiApp interface; // Your ImGui class
+        ImGuiApp interface;
 
         Camera camera;
 

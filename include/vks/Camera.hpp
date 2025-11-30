@@ -76,6 +76,9 @@ public:
     const glm::mat4& view() const { return m_view; }
     const glm::mat4& proj() const { return m_proj; }
 
+    const glm::vec3 getPosition() const { return position; }
+    const glm::vec3 getDirection() const { return forward(); }
+
     void setAspect(float aspect)
     {
         m_aspectRatio = aspect;

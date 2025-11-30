@@ -37,26 +37,15 @@ vks::Application::Application()
 
     // Now that all core systems are up, load assets
     loadAssets();
-
-    m_materials.push_back(
-        Material(
-            device,
-            graphicsPipeline,
-            m_globalDescriptorPool,
-            "sphere",
-            glm::vec4{1.0f, 0.0f, 0.0f, 1.0f}));
-
-    m_materials.push_back(
-        Material(
-            device,
-            graphicsPipeline,
-            m_globalDescriptorPool,
-            "sphere", // The name of the pipeline to use
-            glm::vec4{0.0f, 122.0f / 255.0f, 1.0f, 1.0f} // Blue
-        ));
     buildScene();
 
     camera.init(&window.input(), swapChain.extent().width / (float)swapChain.extent().height);
+}
+
+Application::~Application()
+{
+    // Release all the assets
+    m_assets.clearAll();
 }
 
 /**
@@ -91,10 +80,43 @@ void Application::loadAssets()
             .build(m_cameraDescriptorSet); // m_cameraDescriptorSet is now valid!
     }
 
-    // 4. Create Models
-    // This calls Model::createSphere, which uses your sphere generation code
-    // and uploads it to the GPU.
+    auto sphereModel = Model{};
+    sphereModel.createSphere(device, commandPool.handle(), 1.0f, 32, 16);
+    m_assets.add<Model>("sphere", std::move(sphereModel));
+    
     m_models["sphere"].createSphere(device, commandPool.handle(), 1.0f, 32, 16);
+
+    auto redMaterial = std::make_unique<ColorMaterial>(
+        device,
+        graphicsPipeline,
+        m_globalDescriptorPool,
+        "sphere",
+        ColorMaterialUBO{ glm::vec4{1.0f, 0.0f, 0.0f, 1.0f} }
+    );
+    redMaterial->layer_priority = 0;
+
+    auto blueMaterial = std::make_unique<ColorMaterial>(
+        device,
+        graphicsPipeline,
+        m_globalDescriptorPool,
+        "sphere",
+        ColorMaterialUBO{ glm::vec4{0.0f, 122.0f / 255.0f, 1.0f, 1.0f} } // Blue
+    );
+    blueMaterial->layer_priority = 0; // Render blue sphere after red sphere
+
+    auto gridMaterial = std::make_unique<GridMaterial>(
+        device,
+        graphicsPipeline,
+        m_globalDescriptorPool,
+        "grid",
+        GridMaterialUBO{ glm::vec4{0.8f, 0.8f, 0.0f, 1.0f}, 5.0f, 20 }
+    );
+
+    gridMaterial->layer_priority = -1; // Render grid first
+    
+    m_assets.add<std::unique_ptr<Material>>("red_sphere", std::move(redMaterial));
+    m_assets.add<std::unique_ptr<Material>>("blue_sphere", std::move(blueMaterial));
+    m_assets.add<std::unique_ptr<Material>>("grid", std::move(gridMaterial));
 }
 
 /**
@@ -103,18 +125,24 @@ void Application::loadAssets()
 void Application::buildScene()
 {
     // Create a red sphere at (0, 0, 0)
-    RenderObject redSphere;
+    RenderObject redSphere{};
     redSphere.model = &m_models.at("sphere"); // Use .at() to avoid default constructor
-    redSphere.material = &m_materials[0];
+    redSphere.material = m_assets.get<std::unique_ptr<Material>>("red_sphere").get();
     redSphere.transform = glm::translate(glm::mat4(1.0f), {0.0f, 0.0f, 0.0f});
     m_renderObjects.push_back(redSphere);
 
     // Create a blue sphere at (2, 0, 0)
-    RenderObject blueSphere;
+    RenderObject blueSphere{};
     blueSphere.model = &m_models.at("sphere");
-    blueSphere.material = &m_materials[1];
+    blueSphere.material = m_assets.get<std::unique_ptr<Material>>("blue_sphere").get();
     blueSphere.transform = glm::translate(glm::mat4(1.0f), {2.0f, 0.0f, 0.0f});
     m_renderObjects.push_back(blueSphere);
+
+    RenderObject gridObj{};
+    gridObj.model = nullptr; // Indicates procedural draw
+    gridObj.material = m_assets.get<std::unique_ptr<vks::Material>>("grid").get();
+    gridObj.transform = glm::mat4(1.0f);
+    m_renderObjects.push_back(gridObj);
 }
 
 void Application::updateUBOs(uint32_t currentImage)
@@ -144,11 +172,6 @@ void Application::run()
 {
     window.setDrawFrameFunc([this](bool& framebufferResized, float deltaTime)
     {
-        if (framebufferResized)
-        {
-            std::cout << "Resized!" << std::endl;
-        }
-
         drawImGui();
         drawFrame(framebufferResized);
 
@@ -162,11 +185,6 @@ void Application::run()
 
     window.mainLoop();
     vkDeviceWaitIdle(device.logical());
-}
-
-// This function is not used
-void Application::mainLoop()
-{
 }
 
 
@@ -279,32 +297,14 @@ void Application::drawImGui()
     ImGui::Begin("Material Editor");
 
     // We get a reference to the application's map of materials
-    for (auto& material : m_materials)
+    auto& materials = m_assets.getMap<std::unique_ptr<Material>>();
+    for (auto& pair : materials)
     {
+        auto& material = pair.second;
         // Create a collapsible "tree node" for each material
-        if (ImGui::TreeNode(material.getPipelineName().c_str()))
+        if (ImGui::TreeNode(pair.first.c_str()))
         {
-            // These widgets will return 'true' if they were changed
-            bool changed = false;
-
-            // Add a color picker for the baseColor
-            float color[4] = {
-                material.uboData.color.r,
-                material.uboData.color.g,
-                material.uboData.color.b,
-                material.uboData.color.a
-            };
-
-            changed |= ImGui::ColorEdit4("Base Color", color);
-
-            // If any widget was changed, update the material's UBO
-            if (changed)
-            {
-                MaterialUBO newUbo{};
-                newUbo.color = {color[0], color[1], color[2], color[3]};
-                material.updateUBO(newUbo);
-            }
-
+            material->drawImguiEditor();
             ImGui::TreePop();
         }
     }

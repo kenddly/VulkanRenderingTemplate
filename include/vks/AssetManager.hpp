@@ -61,6 +61,18 @@ public:
         return getRegistry<T>()->getAll();
     }
 
+    template <typename T>
+    void cleanUp()
+    {
+        std::type_index typeIdx(typeid(T));
+        m_registries.erase(typeIdx);
+    }
+
+    void clearAll()
+    {
+        m_registries.clear();
+    }
+
 private:
     // Internal helper to find or create the specific registry
     template <typename T>
