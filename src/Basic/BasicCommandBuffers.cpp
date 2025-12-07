@@ -101,16 +101,18 @@ void BasicCommandBuffers::recordCommands(uint32_t imageIndex)
     const auto& camera = m_app.getCamera(); // Need this for Grid
 
     // Sort (Optimization)
-    std::sort(renderObjects.begin(), renderObjects.end(),
-              [](const RenderObject& a, const RenderObject& b)
-              {
-                  return a.getSortKey() < b.getSortKey();
-              });
+    // TODO: Reimplement this somehow
+    // std::sort(renderObjects.begin(), renderObjects.end(),
+    //           [](const RenderObject& a, const RenderObject& b)
+    //           {
+    //               return a.getSortKey() < b.getSortKey();
+    //           });
 
     // Bind Global Camera Set (Set 0)
     if (cameraSet != VK_NULL_HANDLE && !renderObjects.empty())
     {
-        auto layoutName = renderObjects[0].material->getPipelineName();
+        auto renderObject = renderObjects.begin();
+        auto layoutName = renderObject->second.material->getPipelineName();
         auto layout = m_graphicsPipeline.getLayout(layoutName);
         vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                                 layout, 0, 1, &cameraSet, 0, nullptr);
@@ -123,7 +125,8 @@ void BasicCommandBuffers::recordCommands(uint32_t imageIndex)
 
     for (const auto& obj : renderObjects)
     {
-        auto pipelineName = obj.material->getPipelineName();
+        auto& renderObject = obj.second;
+        auto pipelineName = renderObject.material->getPipelineName();
         VkPipeline pipeline = m_graphicsPipeline.getPipeline(pipelineName);
         VkPipelineLayout layout = m_graphicsPipeline.getLayout(pipelineName);
 
@@ -142,12 +145,12 @@ void BasicCommandBuffers::recordCommands(uint32_t imageIndex)
             }
         }
 
-        obj.material->draw(
+        renderObject.material->draw(
             cmdBuffer,
             layout,
             lastMaterialSet, // Passed by reference so material can update cache
-            obj.model,
-            obj.transform,
+            renderObject.model,
+            renderObject.transform,
             camera
         );
     }

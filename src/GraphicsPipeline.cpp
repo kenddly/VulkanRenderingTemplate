@@ -120,14 +120,13 @@ void GraphicsPipeline::createPipelines()
     // "global" layout (Set 0) for camera UBO
     // Matches: layout(set = 0, binding = 0) uniform CameraUBO
     m_descriptorSetLayouts["global"] = vks::DescriptorSetLayout::Builder(m_device)
-                                       .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
+                                       .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT)
                                        .build();
 
     // "material" layout (Set 1) for material UBO
     // Matches: layout(set = 1, binding = 0) uniform MaterialUBO
     m_descriptorSetLayouts["material"] = vks::DescriptorSetLayout::Builder(m_device)
-                                         .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT)
-                                         // .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // For textures later
+                                         .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT)
                                          .build();
 
     // --- Create Individual Pipelines ---

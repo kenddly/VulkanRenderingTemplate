@@ -10,8 +10,9 @@
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 #include <chrono>
+
+#include "vks/GridMaterial.hpp"
 
 using namespace vks;
 
@@ -84,8 +85,6 @@ void Application::loadAssets()
     sphereModel.createSphere(device, commandPool.handle(), 1.0f, 32, 16);
     m_assets.add<Model>("sphere", std::move(sphereModel));
     
-    m_models["sphere"].createSphere(device, commandPool.handle(), 1.0f, 32, 16);
-
     auto redMaterial = std::make_unique<ColorMaterial>(
         device,
         graphicsPipeline,
@@ -109,7 +108,16 @@ void Application::loadAssets()
         graphicsPipeline,
         m_globalDescriptorPool,
         "grid",
-        GridMaterialUBO{ glm::vec4{0.8f, 0.8f, 0.0f, 1.0f}, 5.0f, 20 }
+        GridMaterialUBO{
+            glm::vec4{0.0f, 0.67f, 0.78f, 1.0f},
+            5.0f,
+            20,
+            1.0f,
+            0.75f,
+            1.0f,
+            100.0f,
+            0.0f
+        }
     );
 
     gridMaterial->layer_priority = -1; // Render grid first
@@ -126,23 +134,23 @@ void Application::buildScene()
 {
     // Create a red sphere at (0, 0, 0)
     RenderObject redSphere{};
-    redSphere.model = &m_models.at("sphere"); // Use .at() to avoid default constructor
+    redSphere.model = &m_assets.get<Model>("sphere");
     redSphere.material = m_assets.get<std::unique_ptr<Material>>("red_sphere").get();
     redSphere.transform = glm::translate(glm::mat4(1.0f), {0.0f, 0.0f, 0.0f});
-    m_renderObjects.push_back(redSphere);
+    m_assets.add<RenderObject>("red_sphere", redSphere);
 
     // Create a blue sphere at (2, 0, 0)
     RenderObject blueSphere{};
-    blueSphere.model = &m_models.at("sphere");
+    blueSphere.model = &m_assets.get<Model>("sphere");
     blueSphere.material = m_assets.get<std::unique_ptr<Material>>("blue_sphere").get();
     blueSphere.transform = glm::translate(glm::mat4(1.0f), {2.0f, 0.0f, 0.0f});
-    m_renderObjects.push_back(blueSphere);
+    m_assets.add<RenderObject>("blue_sphere", blueSphere);
 
     RenderObject gridObj{};
     gridObj.model = nullptr; // Indicates procedural draw
     gridObj.material = m_assets.get<std::unique_ptr<vks::Material>>("grid").get();
     gridObj.transform = glm::mat4(1.0f);
-    m_renderObjects.push_back(gridObj);
+    m_assets.add<RenderObject>("grid", gridObj);
 }
 
 void Application::updateUBOs(uint32_t currentImage)
@@ -156,16 +164,10 @@ void Application::updateUBOs(uint32_t currentImage)
 
     ubo.view = camera.view();
     ubo.proj = camera.proj();
+    ubo.position = camera.getPosition();
 
     // Write to the mapped buffer
     m_cameraUboBuffer->writeToBuffer(&ubo, sizeof(ubo));
-
-    // Let's make the red sphere orbit
-    // get current transform
-    m_renderObjects[0].transform = glm::rotate(glm::mat4(1.0f), 1000 * time * glm::radians(45.0f), {0.0f, 0.0f, 1.0f});
-
-    // Keep the blue sphere static
-    m_renderObjects[1].transform = glm::translate(glm::mat4(1.0f), {2.0f, 0.0f, 0.0f});
 }
 
 void Application::run()
@@ -176,6 +178,10 @@ void Application::run()
         drawFrame(framebufferResized);
 
         camera.update(deltaTime);
+        // get all materials and update them
+        auto& materials = m_assets.getMap<std::unique_ptr<Material>>();
+        for (auto& pair : materials)
+            pair.second->update();
 
         if (window.input().isKeyPressed(GLFW_KEY_SPACE))
         {
@@ -185,6 +191,11 @@ void Application::run()
 
     window.mainLoop();
     vkDeviceWaitIdle(device.logical());
+}
+
+std::unordered_map<std::string, RenderObject>& Application::getRenderObjects()
+{
+    return m_assets.getMap<RenderObject>();
 }
 
 
@@ -294,17 +305,17 @@ void Application::drawImGui()
     ImGui::NewFrame();
 
     // --- NEW MATERIAL EDITOR ---
-    ImGui::Begin("Material Editor");
+    ImGui::Begin("Render Objects");
 
     // We get a reference to the application's map of materials
-    auto& materials = m_assets.getMap<std::unique_ptr<Material>>();
+    auto& materials = m_assets.getMap<RenderObject>();
     for (auto& pair : materials)
     {
-        auto& material = pair.second;
+        auto& renderObject = pair.second;
         // Create a collapsible "tree node" for each material
         if (ImGui::TreeNode(pair.first.c_str()))
         {
-            material->drawImguiEditor();
+            renderObject.drawImguiEditor();
             ImGui::TreePop();
         }
     }

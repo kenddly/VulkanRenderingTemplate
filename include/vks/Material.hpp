@@ -35,6 +35,7 @@ public:
     Material(Material&&) = default;
     Material& operator=(Material&&) = default;
     
+    virtual void update() {}
 
     virtual void drawImguiEditor()
     {
@@ -137,8 +138,8 @@ public:
 
     void drawImguiEditor() override
     {
-        if (ImGui::ColorEdit4("Base Color", &uboData.color[0])) flush();
         Material::drawImguiEditor();
+        if (ImGui::ColorEdit4("Base Color", &uboData.color[0])) flush();
     }
 
     void draw(VkCommandBuffer cmd, VkPipelineLayout layout, VkDescriptorSet& lastSet,
@@ -172,71 +173,6 @@ public:
 
             vkCmdDrawIndexed(cmd, model->getIndexCount(), 1, 0, 0, 0);
         }
-    }
-};
-
-// =========================================================================
-// 4. CONCRETE MATERIAL: GRID (Procedural Rendering)
-// =========================================================================
-struct GridMaterialUBO
-{
-    alignas(16) glm::vec4 color;
-    alignas(4) float spacing;
-    alignas(4) float dimension; // Radius of grid
-    alignas(4) float thickness; // Radius of grid
-};
-
-class GridMaterial : public TypedMaterial<GridMaterialUBO>
-{
-public:
-    using TypedMaterial::TypedMaterial;
-
-    void drawImguiEditor() override
-    {
-        bool c = false;
-        c |= ImGui::ColorEdit4("Color", &uboData.color[0]);
-        c |= ImGui::DragFloat("Spacing", &uboData.spacing, 0.1f);
-        c |= ImGui::DragFloat("Dimension", &uboData.dimension, 1.0f);
-        c |= ImGui::DragFloat("Thickness", &uboData.thickness, 1.0f);
-        if (c) flush();
-
-        Material::drawImguiEditor();
-    }
-
-    void draw(VkCommandBuffer cmd, VkPipelineLayout layout, VkDescriptorSet& lastSet,
-              const vks::Model* model, const glm::mat4& transform, const vks::Camera& camera) override
-    {
-        // Grid usually doesn't use the Descriptor Set 1 (Material UBO) in the shader
-        // but we bind it anyway to satisfy layout compatibility if needed.
-        if (m_materialDescriptorSet != lastSet)
-        {
-            vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                    layout, 1, 1, &m_materialDescriptorSet, 0, nullptr);
-            lastSet = m_materialDescriptorSet;
-        }
-
-        // 1. Prepare Push Constants specific to the Grid Shader
-        struct GridPushData
-        {
-            glm::vec4 camPos; // Used for Camera Pos or Transform
-            glm::vec4 color;
-            glm::vec2 settings; // spacing, dimension, padding
-        } push{};
-
-        push.camPos = glm::vec4(camera.getPosition(), 0);
-        push.color = uboData.color;
-        push.settings = glm::vec2(uboData.spacing, uboData.dimension);
-
-        vkCmdSetLineWidth(cmd, uboData.thickness);
-
-        vkCmdPushConstants(cmd, layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-                           0, sizeof(GridPushData), &push);
-
-        // 2. Procedural Draw Call (No Vertex Buffers)
-        int S = 2 * (int)uboData.dimension + 1;
-        int instanceCount = 3 * S * S; // 3 axes
-
-        vkCmdDraw(cmd, 2, instanceCount, 0, 0);
     }
 };
 }

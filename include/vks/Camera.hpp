@@ -11,6 +11,7 @@ struct CameraUBO
 {
     glm::mat4 view;
     glm::mat4 proj;
+    glm::vec3 position;
 };
 
 
@@ -138,8 +139,8 @@ private:
         m_proj = glm::perspective(
             glm::radians(45.0f),
             m_aspectRatio,
-            0.1f,
-            100.0f
+            1.0f,
+            1000.0f
         );
 
         // Flip Y for Vulkan (Clip space Y is inverted compared to OpenGL)

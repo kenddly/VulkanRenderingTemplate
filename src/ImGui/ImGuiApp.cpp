@@ -15,6 +15,8 @@ ImGuiApp::ImGuiApp(const Instance &instance, Window &window,
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
+    io.Fonts->AddFontFromFileTTF("assets/fonts/ClearSans-Regular.ttf");
+    io.FontGlobalScale = 2.0f;
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();

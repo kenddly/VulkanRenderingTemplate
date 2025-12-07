@@ -18,6 +18,7 @@ class ImGuiExample(ConanFile):
         self.requires("glslang/1.4.313.0")
         self.requires("doctest/2.4.11")
         self.requires("vulkan-memory-allocator/3.3.0")
+        self.requires("entt/3.15.0")
 
     def generate(self):
         copy(

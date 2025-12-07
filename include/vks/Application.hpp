@@ -5,8 +5,6 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-#include <imgui.h>
-#include <imgui_impl_glfw.h>
 #include <imgui_impl_vulkan.h>
 
 #include <vks/Basic/BasicRenderPass.hpp>
@@ -20,6 +18,7 @@
 #include <vks/SyncObjects.hpp>
 #include <vks/Window.hpp>
 #include <vks/Model.hpp>
+#include <vks/RenderObject.hpp>
 #include <vks/Material.hpp>
 #include <vks/Descriptors.hpp>
 #include <vks/Camera.hpp>
@@ -28,23 +27,6 @@
 
 namespace vks
 {
-
-
-    // A struct to define a "thing" in your scene
-    // (This is from your Application.hpp (Updated) file)
-    struct RenderObject
-    {
-        vks::Model* model;
-        vks::Material* material;
-        glm::mat4 transform;
-
-        uint64_t getSortKey() const
-        {
-            return material->layer_priority;
-        }
-    };
-
-
     class Application
     {
     public:
@@ -55,7 +37,7 @@ namespace vks
         static Application& getInstance() { return *m_app; };
 
         // --- Getters for the CommandBuffer ---
-        const std::vector<RenderObject>& getRenderObjects() const { return m_renderObjects; }
+        std::unordered_map<std::string, RenderObject>& getRenderObjects();
         VkDescriptorSet getCameraDescriptorSet() const { return m_cameraDescriptorSet; }
         const CommandPool& getCommandPool() const { return commandPool; };
         const Camera& getCamera() const { return camera; }
@@ -104,12 +86,7 @@ namespace vks
 
         // --- New Asset Registries ---
         Ref<vks::DescriptorPool> m_globalDescriptorPool;
-        std::map<std::string, vks::Model> m_models;
 
-        std::vector<Material> m_materials;
-
-        // --- New Scene Data ---
-        std::vector<RenderObject> m_renderObjects;
         std::unique_ptr<vks::Buffer> m_cameraUboBuffer;
         VkDescriptorSet m_cameraDescriptorSet = VK_NULL_HANDLE;
     };
