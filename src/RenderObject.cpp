@@ -22,6 +22,11 @@ void RenderObject::drawImguiEditor()
     c |= ImGui::DragFloat3("Rotation", &rotation.x, 0.1);
     c |= ImGui::DragFloat3("Scale", &scale.x, 0.1);
 
+    ImGui::Separator();
+    c |= ImGui::DragFloat3("Acceleration", &acceleration.x, 0.1);
+    c |= ImGui::DragFloat3("Velocity", &velocity.x, 0.1);
+    c |= ImGui::DragFloat("Mass", &mass, 0.1, 0.01, 1000.0);
+
     if (c) updateTransform();
 }
 

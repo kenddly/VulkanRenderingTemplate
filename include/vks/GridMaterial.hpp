@@ -2,6 +2,8 @@
 
 #include <vks/Material.hpp>
 
+#include "Physics.hpp"
+
 #define MAX_SPHERE_COUNT 16
 
 namespace vks
@@ -30,7 +32,7 @@ namespace vks
 
         void update() override
         {
-            uboData.time += 0.016;
+            uboData.time = Time::getTotalTime();
             flush();
         }
 
@@ -72,6 +74,6 @@ namespace vks
         }
 
     private:
-        int thickness = 1;
+        int thickness = 4;
     };
 }

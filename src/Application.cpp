@@ -12,6 +12,7 @@
 #include <glm/glm.hpp>
 #include <chrono>
 
+#include "Time.hpp"
 #include "vks/GridMaterial.hpp"
 
 using namespace vks;
@@ -183,10 +184,10 @@ void Application::run()
         for (auto& pair : materials)
             pair.second->update();
 
-        if (window.input().isKeyPressed(GLFW_KEY_SPACE))
-        {
-            std::cout << "Space key pressed!" << std::endl;
-        }
+        Physics::calculateGravity();
+
+        Time::deltaTime = deltaTime;
+        Time::totalTime += deltaTime;
     });
 
     window.mainLoop();
