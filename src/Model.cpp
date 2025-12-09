@@ -1,8 +1,7 @@
 #include <vks/Model.hpp>
 
-#include "vks/Application.hpp"
-#include "vks/CommandBuffers.hpp"
-#include "vks/Basic/BasicCommandBuffers.hpp"
+#include <vks/Application.hpp>
+#include <vks/CommandBuffers.hpp>
 using namespace vks;
 
 void Model::createSphere(

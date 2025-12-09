@@ -1,19 +1,21 @@
-#ifndef IMGUIRENDERPASS_HPP
-#define IMGUIRENDERPASS_HPP
+#pragma once
 
 #include <stdexcept>
-#include <vks/RenderPass.hpp>
+#include <vks/render/IRenderPass.hpp>
 #include <vulkan/vulkan.h>
 
-namespace vks {
-class ImGuiRenderPass : public RenderPass {
-public:
-  ImGuiRenderPass(const Device &device, const SwapChain &swapChain);
-
-private:
-  void createRenderPass() override;
-  void createFrameBuffers() override;
-};
+namespace vks
+{
+    class ImGuiRenderPass : public IRenderPass
+    {
+    public:
+        ImGuiRenderPass(const Device& device, const SwapChain& swapChain);
+        void update(float dt, uint32_t currentImage) override;
+        void record(VkCommandBuffer cmd, uint32_t currentImage) override;
+        void onResize() override;
+        
+    private:
+        void createRenderPass() override;
+        void createFrameBuffers() override;
+    };
 } // namespace vks
-
-#endif // IMGUIRENDERPASS_HPP

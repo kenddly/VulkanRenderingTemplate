@@ -5,22 +5,21 @@
 #include <vks/CommandBuffers.hpp>
 #include <vulkan/vulkan.h>
 
-namespace vks {
+namespace vks
+{
+    class ImGuiCommandBuffers : public CommandBuffers
+    {
+    public:
+        ImGuiCommandBuffers(const Device& device,
+                            const SwapChain& swapChain,
+                            const CommandPool& commandPool);
 
-class ImGuiCommandBuffers : public CommandBuffers {
-public:
-  ImGuiCommandBuffers(const Device &device, const RenderPass &renderpass,
-                      const SwapChain &swapChain,
-                      const GraphicsPipeline &graphicsPipeline,
-                      const CommandPool &commandPool);
+        void recordCommandBuffers(VkCommandBuffer cmd, uint32_t imageIndex);
+        void recreate();
 
-  void recordCommandBuffers(uint32_t bufferIdx);
-  void recreate();
-
-private:
-  void createCommandBuffers();
-};
-
+    private:
+        void createCommandBuffers();
+    };
 } // namespace vks
 
 #endif // IMGUICOMMANDBUFFERS_HPP

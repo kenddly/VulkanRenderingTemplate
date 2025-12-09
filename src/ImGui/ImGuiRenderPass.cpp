@@ -4,13 +4,82 @@
 #include <vks/ImGui/ImGuiRenderPass.hpp>
 #include <vks/SwapChain.hpp>
 
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_vulkan.h"
+#include "vks/Application.hpp"
+
 using namespace vks;
 
 ImGuiRenderPass::ImGuiRenderPass(const Device &device,
                                  const SwapChain &swapChain)
-    : RenderPass(device, swapChain) {
-  createRenderPass();
-  createFrameBuffers();
+    : IRenderPass(device, swapChain) {
+    createRenderPass();
+    createFrameBuffers();
+    
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO &io = ImGui::GetIO();
+    io.Fonts->AddFontFromFileTTF("assets/fonts/ClearSans-Regular.ttf");
+    io.FontGlobalScale = 2.0f;
+    
+    // Setup Dear ImGui style
+    ImGui::StyleColorsDark();
+
+    auto& app = Application::getInstance();
+    auto& window = app.getWindow();
+    
+    QueueFamilyIndices indices =
+        QueueFamily::FindQueueFamilies(m_device.physical(), window.surface());
+    
+    // Setup Platform/Renderer bindings
+    ImGui_ImplGlfw_InitForVulkan(window.window(), true);
+    ImGui_ImplVulkan_InitInfo init_info = {};
+    
+    init_info.Instance = app.getVulkanInstance().handle();
+    init_info.PhysicalDevice = m_device.physical();
+    init_info.Device = m_device.logical();
+    init_info.QueueFamily = indices.graphicsFamily.value();
+    init_info.Queue = m_device.graphicsQueue();
+    init_info.DescriptorPool = app.getGlobalDescriptorPool()->getDescriptorPool();
+    init_info.MinImageCount = swapChain.numImages();
+    init_info.ImageCount = swapChain.numImages();
+    init_info.PipelineInfoMain.RenderPass = handle();
+    init_info.PipelineInfoMain.Subpass = 0;
+    init_info.PipelineInfoMain.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+    ImGui_ImplVulkan_Init(&init_info);
+}
+
+void ImGuiRenderPass::update(float dt, uint32_t currentImage)
+{
+}
+
+void ImGuiRenderPass::record(VkCommandBuffer cmd, uint32_t currentImage)
+{
+    VkClearValue clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
+    VkRenderPassBeginInfo renderPassBeginInfo = {};
+    renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    renderPassBeginInfo.renderPass = handle();
+    renderPassBeginInfo.framebuffer = frameBuffer(currentImage);
+    renderPassBeginInfo.renderArea.extent.width = m_swapChain.extent().width;
+    renderPassBeginInfo.renderArea.extent.height = m_swapChain.extent().height;
+    renderPassBeginInfo.clearValueCount = 1;
+    renderPassBeginInfo.pClearValues = &clearColor;
+
+    vkCmdBeginRenderPass(cmd, &renderPassBeginInfo,
+                         VK_SUBPASS_CONTENTS_INLINE);
+
+    // Grab and record the draw data for Dear Imgui
+    ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
+
+    // End and submit render pass
+    vkCmdEndRenderPass(cmd);
+}
+
+void ImGuiRenderPass::onResize()
+{
+    recreate();
+    cleanupOld();
 }
 
 void ImGuiRenderPass::createRenderPass() {

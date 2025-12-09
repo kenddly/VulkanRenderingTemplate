@@ -1,21 +1,132 @@
-#include <iostream>
-#include <vks/Basic/BasicRenderPass.hpp>
+#include <vks/Render/GeometryPass.hpp>
 #include <vks/Device.hpp>
 #include <vks/SwapChain.hpp>
+#include <vks/Application.hpp>
 
 #include <array>
 
 using namespace vks;
 
-BasicRenderPass::BasicRenderPass(const Device &device,
+GeometryPass::GeometryPass(const Device &device,
                                  const SwapChain &swapChain)
-    : RenderPass(device, swapChain) {
-  createRenderPass();
-  createFrameBuffers();
+    : IRenderPass(device, swapChain)
+{
+    GeometryPass::createRenderPass();
+    GeometryPass::createFrameBuffers();
+    m_graphicsPipeline = std::make_shared<GeometryPipeline>(device, swapChain, handle());
+}
+
+void GeometryPass::update(float dt, uint32_t currentImage)
+{
+    
 }
 
 
-void BasicRenderPass::createRenderPass()
+void GeometryPass::record(VkCommandBuffer cmdBuffer, uint32_t imageIndex)
+{
+    VkRenderPassBeginInfo renderPassInfo{};
+    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    renderPassInfo.renderPass = handle();
+    renderPassInfo.framebuffer = frameBuffer(imageIndex);
+    renderPassInfo.renderArea.offset = {0, 0};
+    renderPassInfo.renderArea.extent = m_swapChain.extent();
+
+    // Set clear color AND depth
+    std::array<VkClearValue, 2> clearValues{};
+    clearValues[0].color = {{0.01f, 0.01f, 0.01f, 1.0f}};
+    clearValues[1].depthStencil = {1.0f, 0}; // For depth buffer
+    renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+    renderPassInfo.pClearValues = clearValues.data();
+
+    vkCmdBeginRenderPass(cmdBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+    VkViewport viewport{};
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
+    viewport.width = static_cast<float>(m_swapChain.extent().width);
+    viewport.height = static_cast<float>(m_swapChain.extent().height);
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    vkCmdSetViewport(cmdBuffer, 0, 1, &viewport);
+
+    VkRect2D scissor{};
+    scissor.offset = {0, 0};
+    scissor.extent = m_swapChain.extent();
+    vkCmdSetScissor(cmdBuffer, 0, 1, &scissor);
+
+    // Get Scene Data
+    auto& app = Application::getInstance();
+    auto renderObjects = app.getRenderObjects();
+    VkDescriptorSet cameraSet = app.getCameraDescriptorSet();
+    const auto& camera = app.getCamera(); // Need this for Grid
+
+    // Sort (Optimization)
+    // TODO: Reimplement this somehow
+    // std::sort(renderObjects.begin(), renderObjects.end(),
+    //           [](const RenderObject& a, const RenderObject& b)
+    //           {
+    //               return a.getSortKey() < b.getSortKey();
+    //           });
+
+    // Bind Global Camera Set (Set 0)
+    if (cameraSet != VK_NULL_HANDLE && !renderObjects.empty())
+    {
+        auto renderObject = renderObjects.begin();
+        auto layoutName = renderObject->second.material->getPipelineName();
+        auto layout = m_graphicsPipeline->getLayout(layoutName);
+        vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                layout, 0, 1, &cameraSet, 0, nullptr);
+    }
+
+    // Render Loop
+    VkPipeline lastPipeline = VK_NULL_HANDLE;
+    VkDescriptorSet lastMaterialSet = VK_NULL_HANDLE;
+
+    for (const auto& obj : renderObjects)
+    {
+        auto& renderObject = obj.second;
+        auto pipelineName = renderObject.material->getPipelineName();
+        VkPipeline pipeline = m_graphicsPipeline->getPipeline(pipelineName);
+        VkPipelineLayout layout = m_graphicsPipeline->getLayout(pipelineName);
+
+        // --- Bind Pipeline (If Changed) ---
+        if (pipeline != lastPipeline)
+        {
+            vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+            lastPipeline = pipeline;
+
+            // Re-bind global set if layout changed (Vulkan requirement)
+            if (cameraSet != VK_NULL_HANDLE)
+            {
+                vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                        layout, 0, 1, &cameraSet, 0, nullptr);
+            }
+        }
+
+        renderObject.material->draw(
+            cmdBuffer,
+            layout,
+            lastMaterialSet, // Passed by reference so material can update cache
+            renderObject.model,
+            renderObject.transform,
+            camera
+        );
+    }
+
+    vkCmdEndRenderPass(cmdBuffer);
+}
+
+void GeometryPass::onResize()
+{
+}
+
+void GeometryPass::recreate()
+{
+    m_graphicsPipeline->recreate();
+    IRenderPass::recreate();
+}
+
+void GeometryPass::createRenderPass()
 {
     // Color attachment
     VkAttachmentDescription colorAttachment = {};
@@ -92,8 +203,7 @@ void BasicRenderPass::createRenderPass()
     }
 }
 
-
-void BasicRenderPass::createFrameBuffers()
+void GeometryPass::createFrameBuffers()
 {
     size_t numImages = m_swapChain.numImages();
 
@@ -120,5 +230,3 @@ void BasicRenderPass::createFrameBuffers()
         }
     }
 }
-
-

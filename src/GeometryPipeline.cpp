@@ -1,4 +1,4 @@
-#include <vks/GraphicsPipeline.hpp>
+#include <vks/GeometryPipeline.hpp>
 
 // Include the shader byte code
 #include <base_frag.h>
@@ -13,31 +13,29 @@
 #include <map>
 #include <string>
 #include <array>
-#include <iostream>
 #include <stdexcept>
 #include <glm/glm.hpp>
 
 #include <vks/Device.hpp>
-#include <vks/RenderPass.hpp>
-#include <vks/SwapChain.hpp>
+#include <vks/Render/IRenderPass.hpp>
 #include <vks/Descriptors.hpp>
 
 #include "vks/Geometry.hpp"
+#include "vks/SwapChain.hpp"
 
 using namespace vks;
 
-GraphicsPipeline::GraphicsPipeline(const Device& device,
+GeometryPipeline::GeometryPipeline(const Device& device,
                                    const SwapChain& swapChain,
-                                   const RenderPass& renderPass)
+                                   VkRenderPass renderPass)
     : m_oldLayout(VK_NULL_HANDLE),
-      m_device(device), m_swapChain(swapChain), m_renderPass(renderPass)
+      m_device(device), m_swapChain(swapChain)
 {
-    // Call the main function to create ALL pipelines
+    this->renderPass = renderPass;
     createPipelines();
-    std::cout << "Successfully created the pipeline" << std::endl;
 }
 
-GraphicsPipeline::~GraphicsPipeline()
+GeometryPipeline::~GeometryPipeline()
 {
     // Clean up all pipelines and layouts in the maps
     for (auto& pair : m_pipelines)
@@ -53,44 +51,44 @@ GraphicsPipeline::~GraphicsPipeline()
     m_descriptorSetLayouts.clear();
 }
 
-VkPipeline GraphicsPipeline::getPipeline(const std::string& name) const
+VkPipeline GeometryPipeline::getPipeline(const std::string& name) const
 {
     // Use .at() for const-correctness and bounds checking
     try
     {
         return m_pipelines.at(name);
     }
-    catch (const std::out_of_range& e)
+    catch (const std::out_of_range& _)
     {
         throw std::runtime_error("Failed to find pipeline: " + name);
     }
 }
 
-VkPipelineLayout GraphicsPipeline::getLayout(const std::string& name) const
+VkPipelineLayout GeometryPipeline::getLayout(const std::string& name) const
 {
     try
     {
         return m_pipelineLayouts.at(name);
     }
-    catch (const std::out_of_range& e)
+    catch (const std::out_of_range& _)
     {
         throw std::runtime_error("Failed to find pipeline layout: " + name);
     }
 }
 
-Ref<DescriptorSetLayout> GraphicsPipeline::getDescriptorSetLayout(const std::string& name) const
+Ref<DescriptorSetLayout> GeometryPipeline::getDescriptorSetLayout(const std::string& name) const
 {
     try
     {
         return m_descriptorSetLayouts.at(name);
     }
-    catch (const std::out_of_range& e)
+    catch (const std::out_of_range& _)
     {
         throw std::runtime_error("Failed to find descriptor set layout: " + name);
     }
 }
 
-void GraphicsPipeline::recreate()
+void GeometryPipeline::recreate()
 {
     // Clean up all pipelines and layouts in the maps
     for (auto& pair : m_pipelines)
@@ -112,7 +110,7 @@ void GraphicsPipeline::recreate()
     createPipelines();
 }
 
-void GraphicsPipeline::createPipelines()
+void GeometryPipeline::createPipelines()
 {
     // --- Create Shared Descriptor Set Layouts ---
     // Use your new vks::DescriptorSetLayout::Builder
@@ -135,7 +133,7 @@ void GraphicsPipeline::createPipelines()
     createGridPipeline();
 }
 
-void GraphicsPipeline::createBasePipeline()
+void GeometryPipeline::createBasePipeline()
 {
     VkShaderModule vertShaderModule = createShaderModule(BASE_VERT);
     VkShaderModule fragShaderModule = createShaderModule(BASE_FRAG);
@@ -250,7 +248,7 @@ void GraphicsPipeline::createBasePipeline()
     pipelineInfo.pDepthStencilState = &depthStencil; // No depth
     pipelineInfo.pDynamicState = nullptr;
     pipelineInfo.layout = pipelineLayout;
-    pipelineInfo.renderPass = m_renderPass.handle();
+    pipelineInfo.renderPass = renderPass;
     pipelineInfo.subpass = 0;
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
     pipelineInfo.basePipelineIndex = -1;
@@ -273,7 +271,7 @@ void GraphicsPipeline::createBasePipeline()
     }
 }
 
-void GraphicsPipeline::createSpherePipeline()
+void GeometryPipeline::createSpherePipeline()
 {
     VkShaderModule vertShaderModule = createShaderModule(SPHERE_VERT);
     VkShaderModule fragShaderModule = createShaderModule(SPHERE_FRAG);
@@ -408,7 +406,7 @@ void GraphicsPipeline::createSpherePipeline()
     pipelineInfo.pDepthStencilState = &depthStencil; // Set depth state
     pipelineInfo.pDynamicState = nullptr;
     pipelineInfo.layout = pipelineLayout;
-    pipelineInfo.renderPass = m_renderPass.handle();
+    pipelineInfo.renderPass = renderPass;
     pipelineInfo.subpass = 0;
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
     pipelineInfo.basePipelineIndex = -1;
@@ -431,7 +429,7 @@ void GraphicsPipeline::createSpherePipeline()
     }
 }
 
-void GraphicsPipeline::createGridPipeline()
+void GeometryPipeline::createGridPipeline()
 {
     VkShaderModule vertShaderModule = createShaderModule(GRID_VERT);
     VkShaderModule fragShaderModule = createShaderModule(GRID_FRAG);
@@ -584,7 +582,7 @@ void GraphicsPipeline::createGridPipeline()
     pipelineInfo.pDepthStencilState = &depthStencil;
     pipelineInfo.pColorBlendState = &colorBlending;
     pipelineInfo.layout = pipelineLayout;
-    pipelineInfo.renderPass = m_renderPass.handle();
+    pipelineInfo.renderPass = renderPass;
     pipelineInfo.subpass = 0;
 
     VkPipeline pipeline;
@@ -603,8 +601,7 @@ void GraphicsPipeline::createGridPipeline()
 
 }
 
-VkShaderModule
-GraphicsPipeline::createShaderModule(const std::vector<unsigned char>& code)
+VkShaderModule GeometryPipeline::createShaderModule(const std::vector<unsigned char>& code) const
 {
     VkShaderModuleCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;

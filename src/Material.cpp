@@ -4,7 +4,7 @@ namespace vks {
 
     Material::Material(
         const vks::Device& device,
-        const vks::GraphicsPipeline& pipelineManager,
+        const vks::GeometryPipeline& pipelineManager,
         Ref<vks::DescriptorPool> descriptorPool,
         const std::string& pipelineName,
         VkDeviceSize uboSize

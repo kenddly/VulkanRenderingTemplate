@@ -7,15 +7,11 @@
 
 #include <imgui_impl_vulkan.h>
 
-#include <vks/Basic/BasicRenderPass.hpp>
-#include <vks/Basic/BasicCommandBuffers.hpp>
 #include <vks/DebugUtilsMessenger.hpp>
 #include <vks/Device.hpp>
-#include <vks/GraphicsPipeline.hpp>
 #include <vks/ImGui/ImGuiApp.hpp>
 #include <vks/Instance.hpp>
 #include <vks/SwapChain.hpp>
-#include <vks/SyncObjects.hpp>
 #include <vks/Window.hpp>
 #include <vks/Model.hpp>
 #include <vks/RenderObject.hpp>
@@ -23,6 +19,7 @@
 #include <vks/Descriptors.hpp>
 #include <vks/Camera.hpp>
 #include <vks/AssetManager.hpp>
+#include <vks/Render/RenderGraph.hpp>
 
 
 namespace vks
@@ -41,11 +38,13 @@ namespace vks
         VkDescriptorSet getCameraDescriptorSet() const { return m_cameraDescriptorSet; }
         const CommandPool& getCommandPool() const { return commandPool; };
         const Camera& getCamera() const { return camera; }
+        Window& getWindow() { return window; };
+        Instance& getVulkanInstance() { return instance; };
+        Ref<DescriptorPool> getGlobalDescriptorPool() { return m_globalDescriptorPool; };
 
     private:
         void drawFrame(bool& framebufferResized);
         void drawImGui();
-        void recreateSwapChain(bool& framebufferResized);
 
         /**
          * @brief Creates all asset registries (pools, models, materials).
@@ -60,29 +59,26 @@ namespace vks
         /**
          * @brief Updates scene data (e.g., camera matrices).
          */
-        void updateUBOs(uint32_t currentImage);
+        void updateUBOs();
 
         // Static Application Instance
         inline static Application* m_app = nullptr;
         AssetManager m_assets;
 
         // --- Core Vulkan Objects ---
-        // (These are from your original constructor)
         Instance instance;
         DebugUtilsMessenger debugMessenger;
         Window window;
         Device device;
         SwapChain swapChain;
-        BasicRenderPass renderPass;
         CommandPool commandPool;
-        GraphicsPipeline graphicsPipeline;
-        BasicCommandBuffers commandBuffers;
-        SyncObjects syncObjects;
-        ImGuiApp interface;
+        
+        // --- Main Renderer ---
+        RenderGraph renderGraph;
+        Ref<GeometryPipeline> graphicsPipeline;
+
 
         Camera camera;
-
-        int currentFrame = 0;
 
         // --- New Asset Registries ---
         Ref<vks::DescriptorPool> m_globalDescriptorPool;

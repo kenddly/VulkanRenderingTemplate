@@ -5,46 +5,46 @@
 #include <functional>
 #include <vector>
 #include <vks/CommandPool.hpp>
-#include <vks/Device.hpp>
-#include <vks/GraphicsPipeline.hpp>
-#include <vks/RenderPass.hpp>
-#include <vks/SwapChain.hpp>
+#include <vks/GeometryPipeline.hpp>
 #include <vulkan/vulkan.h>
 
-namespace vks {
+namespace vks
+{
+    class CommandBuffers : public NonCopyable
+    {
+    public:
+        CommandBuffers(const Device& device,
+                       const SwapChain& swapChain,
+                       const CommandPool& commandPool);
+        ~CommandBuffers();
 
-class CommandBuffers : public NonCopyable {
-public:
-  CommandBuffers(const Device &device, const RenderPass &renderpass,
-                 const SwapChain &swapChain,
-                 const GraphicsPipeline &graphicsPipeline,
-                 const CommandPool &commandPool);
-  ~CommandBuffers();
+        inline VkCommandBuffer& command(uint32_t index)
+        {
+            return m_commandBuffers[index];
+        }
 
-  inline VkCommandBuffer &command(uint32_t index) {
-    return m_commandBuffers[index];
-  }
-  inline const VkCommandBuffer &command(uint32_t index) const {
-    return m_commandBuffers[index];
-  }
+        inline const VkCommandBuffer& command(uint32_t index) const
+        {
+            return m_commandBuffers[index];
+        }
 
-  virtual void recreate() = 0;
-  static void
-  SingleTimeCommands(const Device &device, const CommandPool &cmdPool,
-                     const std::function<void(const VkCommandBuffer &)> &func);
+        void recreate();
+        static void SingleTimeCommands(const Device& device, const CommandPool& cmdPool,
+                           const std::function<void(const VkCommandBuffer&)>& func);
 
-protected:
-  std::vector<VkCommandBuffer> m_commandBuffers;
+        void startRecording(uint32_t index);
+        void stopRecording(uint32_t index);
+        
+    protected:
+        std::vector<VkCommandBuffer> m_commandBuffers;
 
-  const Device &m_device;
-  const RenderPass &m_renderPass;
-  const SwapChain &m_swapChain;
-  const GraphicsPipeline &m_graphicsPipeline;
-  const CommandPool &m_commandPool;
+        const Device& m_device;
+        const SwapChain& m_swapChain;
+        const CommandPool& m_commandPool;
 
-  virtual void createCommandBuffers() = 0;
-  void destroyCommandBuffers();
-};
+        void createCommandBuffers(uint32_t count);
+        void destroyCommandBuffers();
+    };
 } // namespace vks
 
 #endif // COMMANDBUFFERS_HPP

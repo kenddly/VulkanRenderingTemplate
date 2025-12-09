@@ -1,21 +1,40 @@
 #include <vks/CommandBuffers.hpp>
 #include <vks/CommandPool.hpp>
 #include <vks/Device.hpp>
-#include <vks/GraphicsPipeline.hpp>
 
 #include <stdexcept>
+
+#include "vks/SwapChain.hpp"
 
 using namespace vks;
 
 CommandBuffers::CommandBuffers(const Device &device,
-                               const RenderPass &renderPass,
                                const SwapChain &swapChain,
-                               const GraphicsPipeline &graphicsPipeline,
                                const CommandPool &commandPool)
-    : m_device(device), m_renderPass(renderPass), m_swapChain(swapChain),
-      m_graphicsPipeline(graphicsPipeline), m_commandPool(commandPool) {}
+    : m_device(device), m_swapChain(swapChain),
+      m_commandPool(commandPool)
+{
+    createCommandBuffers(swapChain.numImages());
+}
 
 CommandBuffers::~CommandBuffers() { destroyCommandBuffers(); }
+
+void CommandBuffers::createCommandBuffers(uint32_t count)
+{
+    m_commandBuffers.resize(count);
+
+    VkCommandBufferAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    allocInfo.commandPool = m_commandPool.handle();
+    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocInfo.commandBufferCount = (uint32_t)m_commandBuffers.size();
+
+    if (vkAllocateCommandBuffers(m_device.logical(), &allocInfo,
+                                 m_commandBuffers.data()) != VK_SUCCESS)
+    {
+        throw std::runtime_error("failed to allocate command buffers!");
+    }
+}
 
 void CommandBuffers::destroyCommandBuffers() {
   vkFreeCommandBuffers(m_device.logical(), m_commandPool.handle(),
@@ -62,3 +81,33 @@ void CommandBuffers::SingleTimeCommands(
 
   vkFreeCommandBuffers(device.logical(), cmdPool.handle(), 1, &commandBuffer);
 }
+
+void CommandBuffers::startRecording(uint32_t index)
+{
+    auto cmdBuffer = m_commandBuffers[index];
+    
+    VkCommandBufferBeginInfo beginInfo{};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+    if (vkBeginCommandBuffer(cmdBuffer, &beginInfo) != VK_SUCCESS)
+    {
+        throw std::runtime_error("failed to begin recording command buffer!");
+    }
+}
+
+void CommandBuffers::stopRecording(uint32_t index)
+{
+    VkCommandBuffer cmd = m_commandBuffers[index];
+
+    // End Recording
+    if (vkEndCommandBuffer(cmd) != VK_SUCCESS)
+    {
+        throw std::runtime_error("failed to record command buffer!");
+    }
+}
+
+void CommandBuffers::recreate() {
+    destroyCommandBuffers();
+    createCommandBuffers(m_swapChain.numImages());
+}
+

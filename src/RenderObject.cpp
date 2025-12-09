@@ -33,7 +33,7 @@ void RenderObject::drawImguiEditor()
 void RenderObject::updateTransform()
 {
     // Convert rotation to quaternion
-    glm::quat qRotation = glm::quat(rotation);
+    auto qRotation = glm::quat(rotation);
 
     // Construct left-handed transformation matrix
     glm::mat4 leftTransform = glm::translate(glm::mat4(1.0f), position) *

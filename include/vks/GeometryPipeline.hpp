@@ -14,7 +14,7 @@ namespace vks {
 // Forward-declarations
 class Device;
 class SwapChain;
-class RenderPass;
+class IRenderPass;
 
 /**
  * @brief Manages the creation and storage of all VkPipeline objects.
@@ -23,11 +23,10 @@ class RenderPass;
  * - VkPipelineLayouts
  * - Ref<DescriptorSetLayout> (the shader interface layouts)
  */
-class GraphicsPipeline : public NonCopyable {
+class GeometryPipeline : public NonCopyable {
 public:
-    GraphicsPipeline(const Device &device, const SwapChain &swapChain,
-                       const RenderPass &renderPass);
-    ~GraphicsPipeline();
+    GeometryPipeline(const Device &device, const SwapChain &swapChain, VkRenderPass renderPass);
+    ~GeometryPipeline();
 
     /**
      * @brief Recreates all pipelines and layouts (e.g., on swapchain resize).
@@ -69,7 +68,6 @@ private:
     // --- Core Vulkan Objects ---
     const Device &m_device;
     const SwapChain &m_swapChain;
-    const RenderPass &m_renderPass;
 
     // --- Private Helper Functions ---
     /**
@@ -95,6 +93,9 @@ private:
     /**
      * @brief Helper to create a shader module from byte code.
      */
-    VkShaderModule createShaderModule(const std::vector<unsigned char> &code);
+    VkShaderModule createShaderModule(const std::vector<unsigned char> &code) const;
+
+    // Stored render pass
+    VkRenderPass renderPass;
 };
 } // namespace vks

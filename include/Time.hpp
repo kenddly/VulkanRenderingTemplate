@@ -8,6 +8,12 @@ namespace vks
     public:
         static float getDeltaTime() { return deltaTime; }
         static float getTotalTime() { return totalTime; }
+
+        static void setDeltaTime(float dt)
+        {
+            deltaTime = dt;
+            totalTime += dt;
+        }
     private:
         friend class Application;
         inline static double deltaTime = 0.0f; // Time between frames

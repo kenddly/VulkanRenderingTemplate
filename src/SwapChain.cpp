@@ -23,6 +23,9 @@ void SwapChain::recreate()
   createSwapChain();
   createImageViews();
   createDepthViews();
+
+  // TODO: WHY NOT?
+  // cleanupOld();
 }
 
 void SwapChain::cleanupOld()

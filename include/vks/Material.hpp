@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vks/GraphicsPipeline.hpp>
+#include <vks/GeometryPipeline.hpp>
 #include <vks/Descriptors.hpp>
 #include <vks/Buffer.hpp>
 
@@ -79,7 +79,7 @@ protected:
     // Protected Constructor: Only derived classes can instantiate
     Material(
         const vks::Device& device,
-        const vks::GraphicsPipeline& pipelineManager,
+        const vks::GeometryPipeline& pipelineManager,
         vks::Ref<vks::DescriptorPool> descriptorPool,
         const std::string& pipelineName,
         VkDeviceSize uboSize
@@ -107,7 +107,7 @@ public:
 
     TypedMaterial(
         const vks::Device& device,
-        const vks::GraphicsPipeline& pipelineManager,
+        const vks::GeometryPipeline& pipelineManager,
         vks::Ref<vks::DescriptorPool> descriptorPool,
         const std::string& pipelineName,
         UBOStruct initialData
