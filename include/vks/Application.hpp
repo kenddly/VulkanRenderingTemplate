@@ -37,7 +37,7 @@ namespace vks
         std::unordered_map<std::string, RenderObject>& getRenderObjects();
         VkDescriptorSet getCameraDescriptorSet() const { return m_cameraDescriptorSet; }
         const CommandPool& getCommandPool() const { return commandPool; };
-        const Camera& getCamera() const { return camera; }
+        Camera& getCamera() { return camera; }
         Window& getWindow() { return window; };
         Instance& getVulkanInstance() { return instance; };
         Ref<DescriptorPool> getGlobalDescriptorPool() { return m_globalDescriptorPool; };

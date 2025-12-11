@@ -210,11 +210,14 @@ std::unordered_map<std::string, RenderObject>& Application::getRenderObjects()
 
 void Application::drawFrame(bool& framebufferResized)
 {
-    bool frameBufferResized = renderGraph.execute(framebufferResized);
-    if (frameBufferResized)
+    if (framebufferResized)
     {
-        camera.setAspect(swapChain.extent().width / (float)swapChain.extent().height);
+        glm::ivec2 size{};
+        window.framebufferSize(size);
+        camera.setAspect(float(size.x) / float(size.y));
     }
+    
+    renderGraph.execute(framebufferResized);
 }
 
 void Application::drawImGui()

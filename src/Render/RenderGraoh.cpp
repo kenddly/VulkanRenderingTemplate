@@ -123,6 +123,7 @@ namespace vks
         if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebufferResized)
         {
             recreateSwapChain(framebufferResized);
+            syncObjects.recreate(swapChain.numImages());
             framebufferResized = false;
         }
         else if (result != VK_SUCCESS)
@@ -166,8 +167,5 @@ namespace vks
 
         // 3. Cleanup old swapchain resources
         swapChain.cleanupOld();
-        
-        // Command buffers don't necessarily need recreation if they are just reset in execute(),
-        // unless the pool was destroyed.
     }
 } // namespace vks
