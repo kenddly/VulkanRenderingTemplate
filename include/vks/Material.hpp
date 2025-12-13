@@ -119,7 +119,8 @@ public:
 
     void flush()
     {
-        writeToBuffer(&uboData, sizeof(UBOStruct));
+        uint32_t size = sizeof(UBOStruct);
+        writeToBuffer(&uboData, size);
     }
 };
 

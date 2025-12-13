@@ -76,7 +76,10 @@ file(GLOB_RECURSE SHADERS
 )
 
 include(cmake/tools/compile-shader.cmake)
-compile_shaders(TARGETS ${SHADERS})
+compile_shaders(
+    TARGET ${PROJECT_NAME}
+    SHADERS ${SHADERS}
+)
 
 # ---------------------------
 # Optional Executable

@@ -94,6 +94,7 @@ private:
      * @brief Helper to create a shader module from byte code.
      */
     VkShaderModule createShaderModule(const std::vector<unsigned char> &code) const;
+    VkShaderModule createShaderModuleFromFile(const std::string& path) const;
 
     // Stored render pass
     VkRenderPass renderPass;

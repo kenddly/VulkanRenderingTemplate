@@ -1,51 +1,63 @@
 ####################################################################################################
-# This function compile any GLSL shader into SPIR-V shader and embed it in a C header file.
-# Example:
-#	compile_shaders(TARGETS "assets/shader/basic.frag" "assets/shader/basic.vert")
+# Compile GLSL shaders into SPIR-V (.spv) files
+#
+# Usage:
+#   compile_shaders(
+#       TARGET my_target
+#       SHADERS file1.vert file2.frag
+#   )
 ####################################################################################################
 
 function(compile_shaders)
+    include(CMakeParseArguments)
 
-	include(CMakeParseArguments)
-    cmake_parse_arguments(SHADERS "" "" "TARGETS" ${ARGN})
+    cmake_parse_arguments(
+        SHADERS
+        ""
+        "TARGET"
+        "SHADERS"
+        ${ARGN}
+    )
 
-	# Note: if it remains unparsed arguments, here, they can be found in variable PARSED_ARGS_UNPARSED_ARGUMENTS
-	if(NOT SHADERS)
-		message(FATAL_ERROR "You must provide targets.")
-	endif()
+    if(NOT SHADERS_TARGET)
+        message(FATAL_ERROR "compile_shaders: TARGET is required")
+    endif()
 
-	# Find the glslangValidator executable
-	if(WIN32)
-		set(glslCompiler "glslangValidator.exe")
-	else()
-		set(glslCompiler "glslangValidator")
-	endif()
+    if(NOT SHADERS_SHADERS)
+        message(FATAL_ERROR "compile_shaders: SHADERS list is empty")
+    endif()
 
-	# For each shader, we create a header file
-	foreach(SHADER ${SHADERS})
+    # Find shader compiler
+    find_program(GLSLC_EXECUTABLE glslc REQUIRED)
 
-		# Prepare a header name and a global variable for this shader
-		get_filename_component(SHADER_NAME ${SHADER} NAME)
-		string(REPLACE "." "_" HEADER_NAME ${SHADER_NAME})
-		string(TOUPPER ${HEADER_NAME} GLOBAL_SHADER_VAR)
+    set(SPIRV_OUTPUTS)
 
-		set(SHADER_HEADER "${PROJECT_SOURCE_DIR}/include/${HEADER_NAME}.h")
+    foreach(SHADER ${SHADERS_SHADERS})
+        # Absolute path of shader
+        get_filename_component(SHADER_ABS ${SHADER} ABSOLUTE)
 
-		add_custom_target(
-			${HEADER_NAME}
-			# Compile any GLSL shader into SPIR-V shader
-			COMMAND ${glslCompiler} -V ${SHADER} -o ${SHADER}.spv
-			# Make a C header file with the SPIR-V shader
-			COMMAND ${CMAKE_COMMAND} -DPATH="${SHADER}.spv" -DHEADER="${SHADER_HEADER}" -DGLOBAL="${GLOBAL_SHADER_VAR}" -P "${CMAKE_SOURCE_DIR}/cmake/scripts/embed-data.cmake"
-			# Rebuild the header file if the shader is updated
-			DEPENDS ${SHADER}
-			COMMENT "Building ${SHADER}.spv and embedding it into ${SHADER_HEADER}"
-		)
+        # Generate: <shader>.<ext>.spv
+        set(SPIRV_FILE "${SHADER_ABS}.spv")
 
-		# Add the custom target like a dependencies of the project
-		add_dependencies(${PROJECT_NAME} ${HEADER_NAME})
+        add_custom_command(
+            OUTPUT ${SPIRV_FILE}
+            COMMAND ${GLSLC_EXECUTABLE}
+                    -std=450
+                    -g
+                    ${SHADER_ABS}
+                    -o ${SPIRV_FILE}
+            DEPENDS ${SHADER_ABS}
+            COMMENT "Compiling shader ${SHADER_ABS}"
+            VERBATIM
+        )
 
-		message(STATUS "Generating build commands for ${SHADER}")
-	endforeach()
+        list(APPEND SPIRV_OUTPUTS ${SPIRV_FILE})
+    endforeach()
 
+    add_custom_target(
+        Shaders
+        DEPENDS ${SPIRV_OUTPUTS}
+    )
+
+    add_dependencies(${SHADERS_TARGET} Shaders)
 endfunction()

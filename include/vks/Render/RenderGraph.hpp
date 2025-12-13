@@ -38,7 +38,7 @@ namespace vks
         bool execute(bool& framebufferResized);
 
         void recreate();
-        void recreateSwapChain(bool& framebufferResized);
+        void recreateSwapChain(bool& framebufferResized) const;
 
         // Cleanup
         void clear() { m_passes.clear(); }
@@ -46,6 +46,7 @@ namespace vks
     private:
         void submit(VkCommandBuffer cmd, uint32_t imageIndex);
         void present(uint32_t imageIndex, bool& framebufferResized);
+        void update(float dt, uint32_t imageIndex);
         
         uint32_t currentFrame = 0;
 
