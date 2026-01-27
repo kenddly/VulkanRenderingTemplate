@@ -2,6 +2,8 @@
 
 #include <vks/Render/IRenderPass.hpp>
 #include <vks/GeometryPipeline.hpp>
+#include <FileWatcher.hpp>
+#include <ShaderCompiler.hpp>
 
 namespace vks
 {
@@ -22,6 +24,8 @@ namespace vks
         void createRenderPass() override;
         void createFrameBuffers() override;
 
+        FileWatcher m_fileWatcher;
+        Ref<ShaderCompiler> m_shaderCompiler;
         Ref<GeometryPipeline> m_graphicsPipeline = nullptr;
     };
 } // namespace vks

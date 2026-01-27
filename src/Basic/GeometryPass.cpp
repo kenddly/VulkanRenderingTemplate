@@ -4,6 +4,7 @@
 #include <vks/Application.hpp>
 
 #include <array>
+#include <iostream>
 
 using namespace vks;
 
@@ -14,11 +15,29 @@ GeometryPass::GeometryPass(const Device &device,
     GeometryPass::createRenderPass();
     GeometryPass::createFrameBuffers();
     m_graphicsPipeline = std::make_shared<GeometryPipeline>(device, swapChain, handle());
+
+    m_shaderCompiler = std::make_shared<ShaderCompiler>([&](const std::filesystem::path& path)
+    {
+        std::cout << "Recreating graphics pipeline..." << std::endl;
+        vkDeviceWaitIdle(m_device.logical());
+        m_graphicsPipeline->recreate();
+    });
+    
+    FileWatcher::Callback callback = [&](const std::filesystem::path &path)
+    {
+        std::cout << "Shader changed: " << path << ", recompiling..." << std::endl;
+        m_shaderCompiler->requestCompile(path);
+    };
+    
+    m_fileWatcher.watchDirectory("assets/shaders/", {".frag", ".vert"}, false, callback);
+    
+    m_graphicsPipeline->recreate();
 }
 
 void GeometryPass::update(float dt, uint32_t currentImage)
 {
-    
+    m_fileWatcher.update();
+    m_shaderCompiler->update();
 }
 
 

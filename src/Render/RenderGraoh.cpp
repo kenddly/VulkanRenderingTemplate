@@ -1,6 +1,9 @@
+#include <filesystem>
 #include <vks/Render/RenderGraph.hpp>
 #include <vks/Application.hpp>
 #include <stdexcept>
+
+#include "Time.hpp"
 
 namespace vks
 {
@@ -64,6 +67,7 @@ namespace vks
         
         submit(cmd, imageIndex);
         present(imageIndex, framebufferResized);
+        update(Time::getDeltaTime(), imageIndex);
         
         // 6. Advance Frame
         currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
@@ -132,6 +136,14 @@ namespace vks
         }
     }
 
+    void RenderGraph::update(float dt, uint32_t imageIndex)
+    {
+        for (auto& pass : m_passes)
+        {
+            pass->update(dt, imageIndex);
+        }
+    }
+
     void RenderGraph::recreate()
     {
         for (auto& pass : m_passes)
@@ -141,7 +153,7 @@ namespace vks
         // Note: cleanupOld is usually handled inside specific recreate logic or destructors
     }
 
-    void RenderGraph::recreateSwapChain(bool& framebufferResized)
+    void RenderGraph::recreateSwapChain(bool& framebufferResized) const
     {
         framebufferResized = true;
 

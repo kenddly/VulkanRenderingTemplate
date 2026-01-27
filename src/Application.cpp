@@ -194,7 +194,7 @@ void Application::run()
         for (auto& pair : materials)
             pair.second->update();
 
-        // Physics::calculateGravity();
+        Physics::calculateGravity();
         Time::setDeltaTime(deltaTime);
     });
 

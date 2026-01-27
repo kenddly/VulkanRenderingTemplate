@@ -1,18 +1,9 @@
 #include <vks/GeometryPipeline.hpp>
 
-// Include the shader byte code
-#include <base_frag.h>
-#include <base_vert.h>
-
-#include <sphere_frag.h>
-#include <sphere_vert.h>
-
-#include <grid_frag.h>
-#include <grid_vert.h>
-
 #include <map>
 #include <string>
 #include <array>
+#include <fstream>
 #include <stdexcept>
 #include <glm/glm.hpp>
 
@@ -22,6 +13,14 @@
 
 #include "vks/Geometry.hpp"
 #include "vks/SwapChain.hpp"
+
+const std::string SHADER_DIR = "assets/shaders/";
+const std::string BASE_VERT = SHADER_DIR + "base.vert.spv";
+const std::string BASE_FRAG = SHADER_DIR + "base.frag.spv";
+const std::string SPHERE_VERT = SHADER_DIR + "sphere.vert.spv";
+const std::string SPHERE_FRAG = SHADER_DIR + "sphere.frag.spv";
+const std::string GRID_VERT = SHADER_DIR + "grid.vert.spv";
+const std::string GRID_FRAG = SHADER_DIR + "grid.frag.spv";
 
 using namespace vks;
 
@@ -135,8 +134,8 @@ void GeometryPipeline::createPipelines()
 
 void GeometryPipeline::createBasePipeline()
 {
-    VkShaderModule vertShaderModule = createShaderModule(BASE_VERT);
-    VkShaderModule fragShaderModule = createShaderModule(BASE_FRAG);
+    VkShaderModule vertShaderModule = createShaderModuleFromFile(BASE_VERT);
+    VkShaderModule fragShaderModule = createShaderModuleFromFile(BASE_FRAG);
 
     VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
     vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -273,8 +272,8 @@ void GeometryPipeline::createBasePipeline()
 
 void GeometryPipeline::createSpherePipeline()
 {
-    VkShaderModule vertShaderModule = createShaderModule(SPHERE_VERT);
-    VkShaderModule fragShaderModule = createShaderModule(SPHERE_FRAG);
+    VkShaderModule vertShaderModule = createShaderModuleFromFile(SPHERE_VERT);
+    VkShaderModule fragShaderModule = createShaderModuleFromFile(SPHERE_FRAG);
 
     VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
     vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -431,8 +430,8 @@ void GeometryPipeline::createSpherePipeline()
 
 void GeometryPipeline::createGridPipeline()
 {
-    VkShaderModule vertShaderModule = createShaderModule(GRID_VERT);
-    VkShaderModule fragShaderModule = createShaderModule(GRID_FRAG);
+    VkShaderModule vertShaderModule = createShaderModuleFromFile(GRID_VERT);
+    VkShaderModule fragShaderModule = createShaderModuleFromFile(GRID_FRAG);
     
     VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
     vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -496,15 +495,13 @@ void GeometryPipeline::createGridPipeline()
     std::vector<VkDynamicState> dynamicStates = {
         VK_DYNAMIC_STATE_VIEWPORT,
         VK_DYNAMIC_STATE_SCISSOR,
-        VK_DYNAMIC_STATE_LINE_WIDTH // <--- CRITICAL: Add this
+        VK_DYNAMIC_STATE_LINE_WIDTH
     };
 
     VkPipelineDynamicStateCreateInfo dynamicState{};
     dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
     dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
     dynamicState.pDynamicStates = dynamicStates.data();
-
-
         
     // Multisampling (Standard)
     VkPipelineMultisampleStateCreateInfo multisampling{};
@@ -542,14 +539,6 @@ void GeometryPipeline::createGridPipeline()
     colorBlending.attachmentCount = 1;
     colorBlending.pAttachments = &colorBlendAttachment;
 
-    // 9. Pipeline Layout
-    // Use the same descriptor layouts as the rest of the app (Set 0 = Camera, Set 1 = Material)
-    // Use the extended Push Constant Range (mat4 + vec4)
-    VkPushConstantRange pushConstantRange{};
-    pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-    pushConstantRange.offset = 0;
-    pushConstantRange.size = sizeof(glm::mat4) + sizeof(glm::vec4); // 80 bytes
-
     std::array<VkDescriptorSetLayout, 2> setLayouts = {
         m_descriptorSetLayouts["global"]->getDescriptorSetLayout(),
         m_descriptorSetLayouts["material"]->getDescriptorSetLayout()
@@ -559,8 +548,6 @@ void GeometryPipeline::createGridPipeline()
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(setLayouts.size());
     pipelineLayoutInfo.pSetLayouts = setLayouts.data();
-    pipelineLayoutInfo.pushConstantRangeCount = 1;
-    pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 
     VkPipelineLayout pipelineLayout;
     if (vkCreatePipelineLayout(m_device.logical(), &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
@@ -618,5 +605,39 @@ VkShaderModule GeometryPipeline::createShaderModule(const std::vector<unsigned c
         throw std::runtime_error("failed to create shader module!");
     }
 
+    return module;
+}
+
+static std::vector<uint32_t> loadSpirv(const std::string& path)
+{
+    std::ifstream file(path, std::ios::ate | std::ios::binary);
+    if (!file.is_open())
+        throw std::runtime_error("Failed to open SPIR-V file: " + path);
+
+    size_t size = (size_t)file.tellg();
+    std::vector<uint32_t> buffer(size / sizeof(uint32_t));
+
+    file.seekg(0);
+    file.read(reinterpret_cast<char*>(buffer.data()), size);
+    file.close();
+
+    return buffer;
+}
+
+VkShaderModule GeometryPipeline::createShaderModuleFromFile(const std::string& path) const
+{
+    auto code = loadSpirv(path);
+
+    VkShaderModuleCreateInfo info{};
+    info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+    info.codeSize = code.size() * sizeof(uint32_t);
+    info.pCode = code.data();
+
+    VkShaderModule module;
+    if (vkCreateShaderModule(m_device.logical(), &info, nullptr, &module) != VK_SUCCESS)
+    {
+        throw std::runtime_error("failed to create shader module from file: " + path);
+    }
+    
     return module;
 }

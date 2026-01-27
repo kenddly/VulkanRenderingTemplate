@@ -77,7 +77,6 @@ namespace vks
         RenderGraph renderGraph;
         Ref<GeometryPipeline> graphicsPipeline;
 
-
         Camera camera;
 
         // --- New Asset Registries ---
