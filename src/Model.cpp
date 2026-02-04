@@ -71,7 +71,7 @@ void Model::createBufferFromData(
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
     );
 
-    CommandBuffers::SingleTimeCommands(device, Application::getInstance().getCommandPool(), [&](const VkCommandBuffer& commandBuffer)
+    CommandBuffers::SingleTimeCommands(device, [&](const VkCommandBuffer& commandBuffer)
     {
         VkBufferCopy copyRegion{};
         copyRegion.srcOffset = 0;

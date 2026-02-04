@@ -1,9 +1,11 @@
 #include <filesystem>
+#include <stdexcept>
+#include <glm/vec2.hpp>
+
 #include <vks/Render/RenderGraph.hpp>
 #include <vks/Application.hpp>
-#include <stdexcept>
-
 #include "Time.hpp"
+#include "vks/EngineContext.hpp"
 
 namespace vks
 {
@@ -155,7 +157,8 @@ namespace vks
         framebufferResized = true;
 
         glm::ivec2 size;
-        auto& window = Application::getInstance().getWindow();
+        auto& ce = EngineContext::get();
+        auto& window = ce.window();
         window.framebufferSize(size);
         while (size[0] == 0 || size[1] == 0)
         {

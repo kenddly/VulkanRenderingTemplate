@@ -130,9 +130,9 @@ void GeometryPipeline::createPipelines()
     // --- Create Shared Descriptor Set Layouts ---
     // Use your new vks::DescriptorSetLayout::Builder
 
-    // "global" layout (Set 0) for camera UBO
+    // "camera" layout (Set 0) for camera UBO
     // Matches: layout(set = 0, binding = 0) uniform CameraUBO
-    m_descriptorSetLayouts["global"] = vks::DescriptorSetLayout::Builder(m_device)
+    m_descriptorSetLayouts["camera"] = vks::DescriptorSetLayout::Builder(m_device)
                                        .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT)
                                        .build();
 
@@ -286,15 +286,6 @@ void GeometryPipeline::createBasePipeline()
     }
 }
 
-void GeometryPipeline::storePipeline(const std::string& pipelineName, VkPipelineLayout pipelineLayout, VkPipeline pipeline)
-{
-    if (m_pipelines.find(pipelineName) != m_pipelines.end() || m_pipelineLayouts.find(pipelineName) != m_pipelineLayouts.end())
-        throw std::runtime_error("Pipeline with name " + pipelineName + " already exists.");
-    
-    m_pipelines[pipelineName] = pipeline;
-    m_pipelineLayouts[pipelineName] = pipelineLayout;
-}
-
 void GeometryPipeline::createSpherePipeline()
 {
     VkShaderModule vertShaderModule = createShaderModuleFromFile(SPHERE_VERT);
@@ -387,9 +378,9 @@ void GeometryPipeline::createSpherePipeline()
     pushConstantRange.size = sizeof(glm::mat4); // Assumes you use GLM for matrices
 
     // This pipeline uses TWO descriptor sets
-    // (Set 0 = "global", Set 1 = "material")
+    // (Set 0 = "camera", Set 1 = "material")
     std::array<VkDescriptorSetLayout, 2> setLayouts = {
-        m_descriptorSetLayouts["global"]->getDescriptorSetLayout(),
+        m_descriptorSetLayouts["camera"]->getDescriptorSetLayout(),
         m_descriptorSetLayouts["material"]->getDescriptorSetLayout()
     };
 
@@ -564,7 +555,7 @@ void GeometryPipeline::createGridPipeline()
     colorBlending.pAttachments = &colorBlendAttachment;
 
     std::array<VkDescriptorSetLayout, 2> setLayouts = {
-        m_descriptorSetLayouts["global"]->getDescriptorSetLayout(),
+        m_descriptorSetLayouts["camera"]->getDescriptorSetLayout(),
         m_descriptorSetLayouts["material"]->getDescriptorSetLayout()
     };
 
@@ -609,6 +600,15 @@ void GeometryPipeline::createGridPipeline()
     vkDestroyShaderModule(m_device.logical(), vertShaderModule, nullptr);
     vkDestroyShaderModule(m_device.logical(), fragShaderModule, nullptr);
 
+}
+
+void GeometryPipeline::storePipeline(const std::string& pipelineName, VkPipelineLayout pipelineLayout, VkPipeline pipeline)
+{
+    if (m_pipelines.find(pipelineName) != m_pipelines.end() || m_pipelineLayouts.find(pipelineName) != m_pipelineLayouts.end())
+        throw std::runtime_error("Pipeline with name " + pipelineName + " already exists.");
+
+    m_pipelines[pipelineName] = pipeline;
+    m_pipelineLayouts[pipelineName] = pipelineLayout;
 }
 
 VkShaderModule GeometryPipeline::createShaderModule(const std::vector<unsigned char>& code) const

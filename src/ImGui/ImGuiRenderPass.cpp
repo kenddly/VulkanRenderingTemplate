@@ -7,6 +7,7 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_vulkan.h"
 #include "vks/Application.hpp"
+#include "vks/EngineContext.hpp"
 
 using namespace vks;
 
@@ -26,22 +27,22 @@ ImGuiRenderPass::ImGuiRenderPass(const Device &device,
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
 
-    auto& app = Application::getInstance();
-    auto& window = app.getWindow();
-    
+    auto& ec= EngineContext::get();
+    auto& window = ec.window();
+
     QueueFamilyIndices indices =
         QueueFamily::FindQueueFamilies(m_device.physical(), window.surface());
-    
+
     // Setup Platform/Renderer bindings
     ImGui_ImplGlfw_InitForVulkan(window.window(), true);
     ImGui_ImplVulkan_InitInfo init_info = {};
-    
-    init_info.Instance = app.getVulkanInstance().handle();
+
+    init_info.Instance = ec.vulkanInstance().handle();
     init_info.PhysicalDevice = m_device.physical();
     init_info.Device = m_device.logical();
     init_info.QueueFamily = indices.graphicsFamily.value();
     init_info.Queue = m_device.graphicsQueue();
-    init_info.DescriptorPool = app.getGlobalDescriptorPool()->getDescriptorPool();
+    init_info.DescriptorPool = ec.globalDescriptorPool()->getDescriptorPool();
     init_info.MinImageCount = swapChain.numImages();
     init_info.ImageCount = swapChain.numImages();
     init_info.PipelineInfoMain.RenderPass = handle();

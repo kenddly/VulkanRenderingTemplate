@@ -4,6 +4,7 @@
 
 #include <stdexcept>
 
+#include "vks/EngineContext.hpp"
 #include "vks/SwapChain.hpp"
 
 using namespace vks;
@@ -43,9 +44,11 @@ void CommandBuffers::destroyCommandBuffers() {
 }
 
 void CommandBuffers::SingleTimeCommands(
-    const Device &device, const CommandPool &cmdPool,
+    const Device &device,
     const std::function<void(const VkCommandBuffer &)> &func) {
+  auto& cmdPool = EngineContext::get().commandPool();
   VkCommandBufferAllocateInfo allocInfo = {};
+
   allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
   allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
   allocInfo.commandPool = cmdPool.handle();

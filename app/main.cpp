@@ -1,28 +1,43 @@
 #include <iostream>
-#include <vks/Application.hpp>
+
+#include <vks/Engine.hpp>
+#include <SandboxApp.hpp>
 #include <Log.hpp>
 
-int main() {
-  // need to init glfw first, to get the suitable glfw extension for the
-  // vkinstance
-  glfwInit();
+int main()
+{
+    try
+    {
+        glfwInit();
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-  // Disable OpenGL
-  glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-  // glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+        // Logging
+        vks::Log::Init();
 
-  vks::Log::Init();
-  vks::Application app;
-  vks::Log::Shutdown();
+        // Engine config
+        vks::EngineConfig config;
+        config.width = 1280;
+        config.height = 720;
+        config.appName = "Vulkan Sandbox";
+        config.engineName = "VKS Engine";
+        config.enableValidation = true;
 
-  try {
-    app.run();
-  } catch (std::exception &e) {
-    std::cout << e.what() << std::endl;
-    return EXIT_FAILURE;
-  }
+        // Create engine + app
+        vks::Engine engine(config);
+        vks::SandboxApp app;
 
-  glfwTerminate();
+        // Run
+        engine.run(app);
 
-  return EXIT_SUCCESS;
+        vks::Log::Shutdown();
+        glfwTerminate();
+    }
+    catch (const std::exception& e)
+    {
+        std::cout << e.what() << std::endl;
+        return EXIT_FAILURE;
+    }
+
+
+    return EXIT_SUCCESS;
 }

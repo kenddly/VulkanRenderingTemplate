@@ -2,6 +2,8 @@
 
 #include <vks/Material.hpp>
 
+#include <vks/EngineContext.hpp>
+#include <Time.hpp>
 #include "Physics.hpp"
 
 #define MAX_SPHERE_COUNT 16
@@ -49,7 +51,7 @@ namespace vks
 
         void update() override
         {
-            auto& renderObjects = Application::getInstance().getRenderObjects();
+            auto& renderObjects = EngineContext::get().scene().objects();
             uboData.sphereCount = 0;
             for (auto& pair : renderObjects)
             {
@@ -99,7 +101,7 @@ namespace vks
         }
 
         void draw(VkCommandBuffer cmd, VkPipelineLayout layout, VkDescriptorSet& lastSet,
-                  const vks::Model* model, const glm::mat4& transform, const vks::Camera& camera) override
+                  const vks::Model* model, const glm::mat4& transform) override
         {
             if (m_materialDescriptorSet != lastSet)
             {
@@ -114,6 +116,11 @@ namespace vks
             int instanceCount = 3 * S * S;
 
             vkCmdDraw(cmd, samplesPerLine, instanceCount, 0, 0);
+        }
+
+        void bind() override
+        {
+            // No special binding needed for this material
         }
 
     private:

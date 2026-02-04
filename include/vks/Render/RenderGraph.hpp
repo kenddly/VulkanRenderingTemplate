@@ -29,9 +29,9 @@ namespace vks
         }
 
         // Add a pass to the end of the pipeline
-        void addPass(std::unique_ptr<IRenderPass> pass)
+        void addPass(Ref<IRenderPass> pass)
         {
-            m_passes.push_back(std::move(pass));
+            m_passes.push_back(pass);
         }
 
         // Execute all passes in order
@@ -43,6 +43,8 @@ namespace vks
         // Cleanup
         void clear() { m_passes.clear(); }
 
+        SwapChain& getSwapChain() { return swapChain; }
+
     private:
         void submit(VkCommandBuffer cmd, uint32_t imageIndex);
         void present(uint32_t imageIndex, bool& framebufferResized);
@@ -53,7 +55,7 @@ namespace vks
         const Device& device;
         SwapChain& swapChain;
 
-        std::vector<std::unique_ptr<IRenderPass>> m_passes;
+        std::vector<Ref<IRenderPass>> m_passes;
         CommandBuffers commandBuffers;
 
         SyncObjects syncObjects;

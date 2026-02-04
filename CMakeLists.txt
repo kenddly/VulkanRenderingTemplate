@@ -48,6 +48,8 @@ file(GLOB_RECURSE PROJECT_HEADERS "${CMAKE_SOURCE_DIR}/include/*.hpp" "${CMAKE_S
 add_library(${PROJECT_NAME} OBJECT
     ${PROJECT_SOURCES}
     ${PROJECT_HEADERS}
+        include/vks/Engine.hpp
+        src/Engine.cpp
 )
 
 target_include_directories(${PROJECT_NAME}

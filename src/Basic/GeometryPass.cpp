@@ -6,6 +6,8 @@
 #include <array>
 #include <iostream>
 
+#include "vks/EngineContext.hpp"
+
 using namespace vks;
 
 GeometryPass::GeometryPass(const Device &device,
@@ -73,10 +75,10 @@ void GeometryPass::record(VkCommandBuffer cmdBuffer, uint32_t imageIndex)
     vkCmdSetScissor(cmdBuffer, 0, 1, &scissor);
 
     // Get Scene Data
-    auto& app = Application::getInstance();
-    auto renderObjects = app.getRenderObjects();
-    VkDescriptorSet cameraSet = app.getCameraDescriptorSet();
-    const auto& camera = app.getCamera(); // Need this for Grid
+    auto& ce = EngineContext::get();
+    auto renderObjects = ce.scene().objects();
+    VkDescriptorSet cameraSet = ce.cameraDescriptorSet();
+    const auto& camera = ce.camera(); // Need this for Grid
 
     // Sort (Optimization)
     // TODO: Reimplement this somehow
@@ -121,13 +123,13 @@ void GeometryPass::record(VkCommandBuffer cmdBuffer, uint32_t imageIndex)
             }
         }
 
+        renderObject.material->bind();
         renderObject.material->draw(
             cmdBuffer,
             layout,
             lastMaterialSet, // Passed by reference so material can update cache
             renderObject.model,
-            renderObject.transform,
-            camera
+            renderObject.transform
         );
     }
 

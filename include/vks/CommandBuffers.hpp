@@ -29,7 +29,7 @@ namespace vks
         }
 
         void recreate();
-        static void SingleTimeCommands(const Device& device, const CommandPool& cmdPool,
+        static void SingleTimeCommands(const Device& device,
                            const std::function<void(const VkCommandBuffer&)>& func);
 
         void startRecording(uint32_t index);

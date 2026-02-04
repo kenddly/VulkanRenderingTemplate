@@ -18,7 +18,7 @@
 namespace vks
 {
 // Forward declare Camera to avoid circular includes
-class Camera; 
+class Camera;
 
 // =========================================================================
 // 1. BASE MATERIAL CLASS
@@ -56,9 +56,10 @@ public:
         VkPipelineLayout layout, 
         VkDescriptorSet& lastSet,
         const vks::Model* model, 
-        const glm::mat4& transform,
-        const vks::Camera& camera
+        const glm::mat4& transform
     ) = 0;
+
+    virtual void bind() = 0;
 
     /**
      * @brief Type-safe helper to cast base material to derived type.
@@ -144,7 +145,7 @@ public:
     }
 
     void draw(VkCommandBuffer cmd, VkPipelineLayout layout, VkDescriptorSet& lastSet,
-              const vks::Model* model, const glm::mat4& transform, const vks::Camera& camera) override
+              const vks::Model* model, const glm::mat4& transform) override
     {
         // 1. Bind Descriptor Set (Optimized)
         if (m_materialDescriptorSet != lastSet)
@@ -174,6 +175,11 @@ public:
 
             vkCmdDrawIndexed(cmd, model->getIndexCount(), 1, 0, 0, 0);
         }
+    }
+
+    void bind() override
+    {
+        // No additional binding needed for this simple material
     }
 };
 }
