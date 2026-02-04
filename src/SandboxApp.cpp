@@ -10,14 +10,16 @@
 #include "vks/GridMaterial.hpp"
 #include "vks/RenderObject.hpp"
 
-namespace vks {
-
-    void SandboxApp::onInit(Engine& engine) {
+namespace vks
+{
+    void SandboxApp::onInit(Engine& engine)
+    {
         loadAssets(engine);
         buildScene(engine);
     }
 
-    void SandboxApp::loadAssets(Engine& engine) {
+    void SandboxApp::loadAssets(Engine& engine)
+    {
         auto geometryPass = std::make_shared<GeometryPass>(
             engine.device(),
             engine.renderer().getSwapChain()
@@ -96,7 +98,8 @@ namespace vks {
         assets.add<Ref<Material>>("grid", gridMaterial);
     }
 
-    void SandboxApp::buildScene(Engine& engine) {
+    void SandboxApp::buildScene(Engine& engine)
+    {
         auto& scene = engine.scene();
         auto& assets = engine.assets();
 
@@ -145,14 +148,26 @@ namespace vks {
         }
     }
 
-    void SandboxApp::onUpdate(float dt) {
-
+    void SandboxApp::onUpdate(float dt)
+    {
     }
 
-    void SandboxApp::onImGui() {
+    void SandboxApp::onImGui()
+    {
         ImGui::Begin("Sandbox");
-        ImGui::Text("Engine / App Split Active");
+        auto& renderObjects = EngineContext::get().scene().objects();
+
+        for (auto& pair : renderObjects)
+        {
+            auto& obj = pair.second;
+
+            if (ImGui::TreeNode(pair.first.c_str()))
+            {
+                obj.drawImguiEditor();
+                ImGui::TreePop();
+            }
+        }
+
         ImGui::End();
     }
-
 }
