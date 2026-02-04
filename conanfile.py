@@ -4,8 +4,7 @@ from conan import ConanFile
 from conan.tools.cmake import cmake_layout
 from conan.tools.files import copy
 
-
-class ImGuiExample(ConanFile):
+class VulkanRenderingTemplate(ConanFile):
     version = "0.0.1"
     name = "vulkan"
     generators = "CMakeDeps", "CMakeToolchain"
@@ -19,6 +18,7 @@ class ImGuiExample(ConanFile):
         self.requires("doctest/2.4.11")
         self.requires("vulkan-memory-allocator/3.3.0")
         self.requires("entt/3.15.0")
+        self.requires("spdlog/1.17.0")
 
     def generate(self):
         copy(

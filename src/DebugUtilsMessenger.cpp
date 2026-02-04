@@ -1,8 +1,8 @@
 #include <vks/DebugUtilsMessenger.hpp>
 #include <vks/Instance.hpp>
 
-#include <iostream>
 #include <stdexcept>
+#include <Log.hpp>
 
 using namespace vks;
 
@@ -50,7 +50,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL DebugUtilsMessenger::DebugCallback(
     VkDebugUtilsMessageTypeFlagsEXT messageType,
     const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
     void *pUserData) {
-  std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
+  LOG_ERROR("validation layer: {}", pCallbackData->pMessage);
   return VK_FALSE;
 }
 

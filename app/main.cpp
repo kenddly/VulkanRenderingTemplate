@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vks/Application.hpp>
+#include <Log.hpp>
 
 int main() {
   // need to init glfw first, to get the suitable glfw extension for the
@@ -10,7 +11,9 @@ int main() {
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
   // glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
+  vks::Log::Init();
   vks::Application app;
+  vks::Log::Shutdown();
 
   try {
     app.run();

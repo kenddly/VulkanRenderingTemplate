@@ -30,6 +30,8 @@ find_package(imgui REQUIRED)
 find_package(VulkanMemoryAllocator REQUIRED)
 find_package(glslang REQUIRED)
 find_package(EnTT REQUIRED)
+find_package(spdlog REQUIRED)
+
 
 # Vulkan (native system SDK)
 find_package(Vulkan REQUIRED)
@@ -65,6 +67,7 @@ target_link_libraries(${PROJECT_NAME}
         GPUOpen::VulkanMemoryAllocator
         glslang::glslang
         EnTT::EnTT
+        spdlog::spdlog
 )
 
 # ---------------------------

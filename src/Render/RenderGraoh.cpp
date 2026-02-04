@@ -29,9 +29,6 @@ namespace vks
             throw std::runtime_error("Failed to acquire swapchain image");
         }
 
-        vkResetFences(device.logical(), 1, &syncObjects.inFlightFence(currentFrame));
-        
-        
         if (syncObjects.imageInFlight(imageIndex) != VK_NULL_HANDLE)
         {
             vkWaitForFences(device.logical(), 1,

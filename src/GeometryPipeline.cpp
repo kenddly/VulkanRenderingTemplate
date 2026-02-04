@@ -3,6 +3,7 @@
 #include <map>
 #include <string>
 #include <array>
+#include <filesystem>
 #include <fstream>
 #include <stdexcept>
 #include <glm/glm.hpp>
@@ -13,6 +14,10 @@
 
 #include "vks/Geometry.hpp"
 #include "vks/SwapChain.hpp"
+#include "vks/Events/EventManager.hpp"
+#include "vks/Events/Events.hpp"
+
+#include "Log.hpp"
 
 const std::string SHADER_DIR = "assets/shaders/";
 const std::string BASE_VERT = SHADER_DIR + "base.vert.spv";
@@ -24,6 +29,8 @@ const std::string GRID_FRAG = SHADER_DIR + "grid.frag.spv";
 
 using namespace vks;
 
+static std::string pipelineNameFromPath(const std::string& path);
+
 GeometryPipeline::GeometryPipeline(const Device& device,
                                    const SwapChain& swapChain,
                                    VkRenderPass renderPass)
@@ -32,6 +39,15 @@ GeometryPipeline::GeometryPipeline(const Device& device,
 {
     this->renderPass = renderPass;
     createPipelines();
+
+    EventManager::subscribe<PipelineReloadEvent>([this](const PipelineReloadEvent& e)
+    {
+        LOG_INFO("[GeometryPipeline] Reloading due to change in: {} pipeline", e.pipelineName);
+        
+        vkDeviceWaitIdle(m_device.logical());
+        
+        this->recreate();
+    });
 }
 
 GeometryPipeline::~GeometryPipeline()
@@ -259,15 +275,24 @@ void GeometryPipeline::createBasePipeline()
     {
         throw std::runtime_error("Base Graphics Pipeline creation failed");
     }
-
+    
     // --- Store in map ---
-    m_pipelines["base"] = pipeline;
-    m_pipelineLayouts["base"] = pipelineLayout;
-
+    auto pipelineName = pipelineNameFromPath(BASE_VERT);
+    storePipeline(pipelineName, pipelineLayout, pipeline);
+    
     for (auto& shader : shaderStages)
     {
         vkDestroyShaderModule(m_device.logical(), shader.module, nullptr);
     }
+}
+
+void GeometryPipeline::storePipeline(const std::string& pipelineName, VkPipelineLayout pipelineLayout, VkPipeline pipeline)
+{
+    if (m_pipelines.find(pipelineName) != m_pipelines.end() || m_pipelineLayouts.find(pipelineName) != m_pipelineLayouts.end())
+        throw std::runtime_error("Pipeline with name " + pipelineName + " already exists.");
+    
+    m_pipelines[pipelineName] = pipeline;
+    m_pipelineLayouts[pipelineName] = pipelineLayout;
 }
 
 void GeometryPipeline::createSpherePipeline()
@@ -419,8 +444,7 @@ void GeometryPipeline::createSpherePipeline()
     }
 
     // --- Store in map ---
-    m_pipelines["sphere"] = pipeline;
-    m_pipelineLayouts["sphere"] = pipelineLayout;
+    storePipeline(pipelineNameFromPath(SPHERE_VERT), pipelineLayout, pipeline);
 
     for (auto& shader : shaderStages)
     {
@@ -578,9 +602,8 @@ void GeometryPipeline::createGridPipeline()
         throw std::runtime_error("Grid Graphics Pipeline creation failed");
     }
 
-    // 11. Store
-    m_pipelines["grid"] = pipeline;
-    m_pipelineLayouts["grid"] = pipelineLayout;
+    // Store in map
+    storePipeline(pipelineNameFromPath(GRID_VERT), pipelineLayout, pipeline);
 
     // Cleanup
     vkDestroyShaderModule(m_device.logical(), vertShaderModule, nullptr);
@@ -640,4 +663,18 @@ VkShaderModule GeometryPipeline::createShaderModuleFromFile(const std::string& p
     }
     
     return module;
+}
+
+static std::string pipelineNameFromPath(const std::string& path)
+{
+    std::filesystem::path pp(path);
+    pp = pp.stem(); // remove extension
+    
+    // get rid of all extensions
+    while (pp.has_extension())
+    {
+        pp = pp.stem();
+    }
+    
+    return pp.string();
 }

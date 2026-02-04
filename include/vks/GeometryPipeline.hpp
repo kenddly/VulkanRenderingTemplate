@@ -96,6 +96,8 @@ private:
     VkShaderModule createShaderModule(const std::vector<unsigned char> &code) const;
     VkShaderModule createShaderModuleFromFile(const std::string& path) const;
 
+    void storePipeline(const std::string& pipelineName, VkPipelineLayout pipelineLayout, VkPipeline pipeline);
+    
     // Stored render pass
     VkRenderPass renderPass;
 };

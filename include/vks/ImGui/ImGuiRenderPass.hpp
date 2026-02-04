@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdexcept>
-#include <vks/render/IRenderPass.hpp>
+#include <vks/Render/IRenderPass.hpp>
 #include <vulkan/vulkan.h>
 
 namespace vks

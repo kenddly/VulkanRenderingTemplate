@@ -40,7 +40,6 @@ void GeometryPass::update(float dt, uint32_t currentImage)
     m_shaderCompiler->update();
 }
 
-
 void GeometryPass::record(VkCommandBuffer cmdBuffer, uint32_t imageIndex)
 {
     VkRenderPassBeginInfo renderPassInfo{};
@@ -200,15 +199,12 @@ void GeometryPass::createRenderPass()
     dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT |
         VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
-    // -----------------------------------------------------------------
-    // 5. Create Render Pass
-    // -----------------------------------------------------------------
-    // Combine color and depth into an array
+    // Create Render Pass
     std::array<VkAttachmentDescription, 2> attachments = {colorAttachment, depthAttachment};
 
     VkRenderPassCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-    createInfo.attachmentCount = 2;
+    createInfo.attachmentCount = attachments.size();
     createInfo.pAttachments = attachments.data();
     createInfo.subpassCount = 1;
     createInfo.pSubpasses = &subpass;

@@ -15,6 +15,8 @@
 #include <vks/Render/GeometryPass.hpp>
 #include <vks/ImGui/ImGuiRenderPass.hpp>
 
+#include "Log.hpp"
+
 
 using namespace vks;
 
