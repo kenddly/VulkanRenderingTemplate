@@ -24,6 +24,7 @@ struct Vertex
 
     void createSphere(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, float radius, uint32_t sectors,
                       uint32_t stacks);
+    void createQuad(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices);
 } // namespace geometry
 } // namespace vks
 

@@ -19,6 +19,7 @@ class VulkanRenderingTemplate(ConanFile):
         self.requires("vulkan-memory-allocator/3.3.0")
         self.requires("entt/3.15.0")
         self.requires("spdlog/1.17.0")
+        self.requires("stb/cci.20240531")
 
     def generate(self):
         copy(

@@ -89,6 +89,7 @@ private:
      * @brief Creates the "grid" pipeline (for grid rendering).
      */
     void createGridPipeline();
+    void createSpritePipeline();
 
     /**
      * @brief Helper to create a shader module from byte code.

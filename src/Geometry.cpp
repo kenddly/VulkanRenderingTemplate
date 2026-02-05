@@ -107,5 +107,20 @@ namespace vks
                 }
             }
         }
+
+        void createQuad(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices)
+        {
+            vertices = {
+                {{-0.5f, -0.5f, 0.0f}, {0, 0, 1}, {0, 1}},
+                {{ 0.5f, -0.5f, 0.0f}, {0, 0, 1}, {1, 1}},
+                {{ 0.5f,  0.5f, 0.0f}, {0, 0, 1}, {1, 0}},
+                {{-0.5f,  0.5f, 0.0f}, {0, 0, 1}, {0, 0}}
+            };
+
+            indices = {
+                0, 1, 2,
+                2, 3, 0
+            };
+        }
     } // namespace geometry
 } // namespace vks

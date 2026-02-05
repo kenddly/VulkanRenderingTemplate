@@ -4,79 +4,116 @@
 #include <vks/CommandBuffers.hpp>
 using namespace vks;
 
+#include <vks/Model.hpp>
+
+#include <vks/CommandBuffers.hpp>
+#include <vks/Geometry.hpp>
+
+using namespace vks;
+
+// ============================================================
+// PUBLIC API
+// ============================================================
+
 void Model::createSphere(
-    const vks::Device& device,
+    const Device& device,
     VkCommandPool commandPool,
     float radius,
     uint32_t sectors,
     uint32_t stacks)
 {
-    // 1. Generate the data on the CPU
-    std::vector<vks::geometry::Vertex> vertices;
+    std::vector<geometry::Vertex> vertices;
     std::vector<uint32_t> indices;
-    vks::geometry::createSphere(vertices, indices, radius, sectors, stacks);
 
-    m_vertexCount = static_cast<uint32_t>(vertices.size());
-    m_indexCount = static_cast<uint32_t>(indices.size());
-
-    // 2. Upload vertex data to the GPU
-    VkDeviceSize vertexBufferSize = sizeof(vertices[0]) * m_vertexCount;
-    createBufferFromData(
-        device,
-        commandPool,
-        vertices.data(),
-        vertexBufferSize,
-        VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-        m_vertexBuffer);
-
-    // 3. Upload index data to the GPU
-    VkDeviceSize indexBufferSize = sizeof(indices[0]) * m_indexCount;
-    createBufferFromData(
-        device,
-        commandPool,
-        indices.data(),
-        indexBufferSize,
-        VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-        m_indexBuffer);
+    geometry::createSphere(vertices, indices, radius, sectors, stacks);
+    upload(device, commandPool, vertices, indices);
 }
 
+void Model::createQuad(
+    const Device& device,
+    VkCommandPool commandPool)
+{
+    std::vector<geometry::Vertex> vertices;
+    std::vector<uint32_t> indices;
+
+    geometry::createQuad(vertices, indices);
+    upload(device, commandPool, vertices, indices);
+}
+
+// ============================================================
+// INTERNAL SHARED UPLOAD
+// ============================================================
+
+void Model::upload(
+    const Device& device,
+    VkCommandPool commandPool,
+    const std::vector<geometry::Vertex>& vertices,
+    const std::vector<uint32_t>& indices)
+{
+    m_vertexCount = static_cast<uint32_t>(vertices.size());
+    m_indexCount  = static_cast<uint32_t>(indices.size());
+
+    VkDeviceSize vertexSize = sizeof(vertices[0]) * m_vertexCount;
+    VkDeviceSize indexSize  = sizeof(indices[0]) * m_indexCount;
+
+    createBufferFromData(
+        device,
+        commandPool,
+        (void*)vertices.data(),
+        vertexSize,
+        VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+        m_vertexBuffer
+    );
+
+    createBufferFromData(
+        device,
+        commandPool,
+        (void*)indices.data(),
+        indexSize,
+        VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+        m_indexBuffer
+    );
+}
+
+// ============================================================
+// GPU BUFFER HELPER
+// ============================================================
+
 void Model::createBufferFromData(
-    const vks::Device& device,
+    const Device& device,
     VkCommandPool commandPool,
     void* data,
     VkDeviceSize size,
     VkBufferUsageFlags usage,
-    std::unique_ptr<vks::Buffer>& outBuffer)
+    std::unique_ptr<Buffer>& outBuffer)
 {
-    // 1. Create a "staging" buffer on the CPU
-    // This is a temporary buffer that's host-visible (mappable)
-    vks::Buffer stagingBuffer{
+    Buffer stagingBuffer{
         device,
         size,
-        VK_BUFFER_USAGE_TRANSFER_SRC_BIT, // It's a "source" for a transfer
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
     };
 
-    // 2. Map and copy data to the staging buffer
     stagingBuffer.map();
     stagingBuffer.writeToBuffer(data);
     stagingBuffer.unmap();
 
-    // 3. Create the final "device" buffer
-    // This buffer is DEVICE_LOCAL (fast GPU memory) but not host-visible
-    outBuffer = std::make_unique<vks::Buffer>(
+    outBuffer = std::make_unique<Buffer>(
         device,
         size,
-        VK_BUFFER_USAGE_TRANSFER_DST_BIT | usage, // It's a "destination" AND its final usage
+        VK_BUFFER_USAGE_TRANSFER_DST_BIT | usage,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
     );
 
-    CommandBuffers::SingleTimeCommands(device, [&](const VkCommandBuffer& commandBuffer)
-    {
-        VkBufferCopy copyRegion{};
-        copyRegion.srcOffset = 0;
-        copyRegion.dstOffset = 0;
-        copyRegion.size = size;
-        vkCmdCopyBuffer(commandBuffer, stagingBuffer.getBuffer(), outBuffer->getBuffer(), 1, &copyRegion);
+    CommandBuffers::SingleTimeCommands(device, [&](VkCommandBuffer cmd) {
+        VkBufferCopy copy{};
+        copy.size = size;
+        vkCmdCopyBuffer(cmd,
+            stagingBuffer.getBuffer(),
+            outBuffer->getBuffer(),
+            1,
+            &copy
+        );
     });
 }
+

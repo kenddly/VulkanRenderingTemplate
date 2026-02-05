@@ -31,6 +31,7 @@ find_package(VulkanMemoryAllocator REQUIRED)
 find_package(glslang REQUIRED)
 find_package(EnTT REQUIRED)
 find_package(spdlog REQUIRED)
+find_package(stb REQUIRED)
 
 
 # Vulkan (native system SDK)
@@ -70,6 +71,7 @@ target_link_libraries(${PROJECT_NAME}
         glslang::glslang
         EnTT::EnTT
         spdlog::spdlog
+        stb::stb
 )
 
 # ---------------------------

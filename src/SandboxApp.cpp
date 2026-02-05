@@ -9,6 +9,8 @@
 #include "Log.hpp"
 #include "vks/GridMaterial.hpp"
 #include "vks/RenderObject.hpp"
+#include "vks/SpriteMaterial.hpp"
+#include "vks/Texture.hpp"
 
 namespace vks
 {
@@ -51,6 +53,20 @@ namespace vks
         );
         assets.add<Model>("sphere", std::move(sphere));
 
+        Model quad{};
+        quad.createQuad(
+            engine.device(),
+            engine.commandPool().handle()
+        );
+        assets.add<Model>("quad", std::move(quad));
+
+
+        Ref<Texture> spriteTexture = std::make_shared<vks::Texture>(
+            engine.device(),
+            "assets/textures/player.png"
+        );
+        assets.add<Ref<Texture>>("sprite_texture", spriteTexture);
+
         auto& pipeline = *geometryPass->getPipeline();
 
         // --- Red material ---
@@ -92,9 +108,23 @@ namespace vks
         );
         gridMaterial->layer_priority = -1;
 
+        vks::SpriteMaterialUBO ubo{};
+        ubo.tint = glm::vec4(1.0f);
+
+        auto spriteMaterial = std::make_shared<vks::SpriteMaterial>(
+            engine.device(),
+            pipeline,
+            engine.globalDescriptorPool(),
+            spriteTexture,
+            "sprite",
+            ubo
+        );
+
+
         // Store in asset manager
         assets.add<Ref<Material>>("red_sphere", redMaterial);
         assets.add<Ref<Material>>("blue_sphere", blueMaterial);
+        assets.add<Ref<Material>>("sprite", spriteMaterial);
         assets.add<Ref<Material>>("grid", gridMaterial);
     }
 
@@ -133,9 +163,7 @@ namespace vks
             );
         }
 
-        // -------------------------------------------------
         // GRID
-        // -------------------------------------------------
         {
             auto& obj = scene.create("grid");
 
@@ -145,6 +173,21 @@ namespace vks
                            .get();
 
             obj.transform = glm::mat4(1.0f);
+        }
+
+        // SPRITE
+        {
+            auto& obj = scene.create("sprite");
+
+            obj.model = &assets.get<Model>("quad"); // Reuse quad model
+            obj.material = assets
+                           .get<Ref<Material>>("sprite")
+                           .get();
+
+            obj.transform = glm::translate(
+                glm::mat4(1.0f),
+                glm::vec3{-2.0f, 0.0f, 0.0f}
+            );
         }
     }
 
