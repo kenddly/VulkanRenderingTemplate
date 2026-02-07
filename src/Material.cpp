@@ -1,21 +1,19 @@
 #include <vks/Material.hpp>
 
+#include "vks/EngineContext.hpp"
+
 namespace vks {
 
     Material::Material(
         const vks::Device& device,
-        const vks::GeometryPipeline& pipelineManager,
-        Ref<vks::DescriptorPool> descriptorPool,
         const std::string& pipelineName,
         VkDeviceSize uboSize
     ) : m_pipelineName(pipelineName),
         m_materialDescriptorSet(VK_NULL_HANDLE)
     {
-        // 1. Get the Descriptor Set Layout
-        // Important: All pipelines used by Materials must share the same Set 1 Layout
-        // (Binding 0 = Uniform Buffer)
-        Ref<vks::DescriptorSetLayout> materialLayout =
-            pipelineManager.getDescriptorSetLayout("material");
+        auto& ec = EngineContext::get();
+        auto descriptorPool = ec.globalDescriptorPool();
+        auto materialLayout = ec.getDescriptorSetLayout("material");
 
         // 2. Create the Uniform Buffer
         m_uboBuffer = std::make_unique<vks::Buffer>(

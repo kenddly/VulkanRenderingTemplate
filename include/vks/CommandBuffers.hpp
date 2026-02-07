@@ -5,8 +5,9 @@
 #include <functional>
 #include <vector>
 #include <vks/CommandPool.hpp>
-#include <vks/GeometryPipeline.hpp>
+#include <vks/SwapChain.hpp>
 #include <vulkan/vulkan.h>
+
 
 namespace vks
 {

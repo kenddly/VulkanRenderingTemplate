@@ -1,28 +1,25 @@
 #include <vks/Render/GeometryPass.hpp>
 #include <vks/Device.hpp>
 #include <vks/SwapChain.hpp>
-#include <vks/Application.hpp>
 
 #include <array>
 #include <iostream>
 
+#include "Log.hpp"
 #include "vks/EngineContext.hpp"
 
 using namespace vks;
 
-GeometryPass::GeometryPass(const Device &device,
-                                 const SwapChain &swapChain)
+GeometryPass::GeometryPass(const Device &device, const SwapChain &swapChain)
     : IRenderPass(device, swapChain)
 {
     GeometryPass::createRenderPass();
     GeometryPass::createFrameBuffers();
-    m_graphicsPipeline = std::make_shared<GeometryPipeline>(device, swapChain, handle());
 
     m_shaderCompiler = std::make_shared<ShaderCompiler>([&](const std::filesystem::path& path)
     {
-        std::cout << "Recreating graphics pipeline..." << std::endl;
-        vkDeviceWaitIdle(m_device.logical());
-        m_graphicsPipeline->recreate();
+        auto& ec = EngineContext::get();
+        ec.renderer().recreate();
     });
     
     FileWatcher::Callback callback = [&](const std::filesystem::path &path)
@@ -32,8 +29,6 @@ GeometryPass::GeometryPass(const Device &device,
     };
     
     m_fileWatcher.watchDirectory("assets/shaders/", {".frag", ".vert"}, false, callback);
-    
-    m_graphicsPipeline->recreate();
 }
 
 void GeometryPass::update(float dt, uint32_t currentImage)
@@ -93,7 +88,7 @@ void GeometryPass::record(VkCommandBuffer cmdBuffer, uint32_t imageIndex)
     {
         auto renderObject = renderObjects.begin();
         auto layoutName = renderObject->second.material->getPipelineName();
-        auto layout = m_graphicsPipeline->getLayout(layoutName);
+        auto layout = pipelines().getLayout(layoutName);
         vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                                 layout, 0, 1, &cameraSet, 0, nullptr);
     }
@@ -106,10 +101,10 @@ void GeometryPass::record(VkCommandBuffer cmdBuffer, uint32_t imageIndex)
     {
         auto& renderObject = obj.second;
         auto pipelineName = renderObject.material->getPipelineName();
-        VkPipeline pipeline = m_graphicsPipeline->getPipeline(pipelineName);
-        VkPipelineLayout layout = m_graphicsPipeline->getLayout(pipelineName);
+        VkPipeline pipeline = pipelines().getPipeline(pipelineName);
+        VkPipelineLayout layout = pipelines().getLayout(pipelineName);
 
-        // --- Bind Pipeline (If Changed) ---
+        // Bind Pipeline (If Changed)
         if (pipeline != lastPipeline)
         {
             vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
@@ -123,7 +118,6 @@ void GeometryPass::record(VkCommandBuffer cmdBuffer, uint32_t imageIndex)
             }
         }
 
-        renderObject.material->bind();
         renderObject.material->draw(
             cmdBuffer,
             layout,
@@ -138,11 +132,12 @@ void GeometryPass::record(VkCommandBuffer cmdBuffer, uint32_t imageIndex)
 
 void GeometryPass::onResize()
 {
+    recreate();
+    cleanupOld();
 }
 
 void GeometryPass::recreate()
 {
-    m_graphicsPipeline->recreate();
     IRenderPass::recreate();
 }
 

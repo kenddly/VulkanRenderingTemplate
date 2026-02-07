@@ -1,11 +1,11 @@
 #pragma once
-#include <array>
 #include <vector>
 #include <memory>
 #include <vks/SwapChain.hpp>
 #include <vks/SyncObjects.hpp>
 #include <vks/CommandBuffers.hpp>
 #include <vks/Render/IRenderPass.hpp>
+#include <vks/Descriptors.hpp>
 
 namespace vks
 {
@@ -32,6 +32,16 @@ namespace vks
         void addPass(Ref<IRenderPass> pass)
         {
             m_passes.push_back(pass);
+        }
+
+        template<typename T> Ref<T> getPass(RenderPassType type) const
+        {
+            for (const auto& pass : m_passes)
+            {
+                if (pass->type() == type)
+                    return std::dynamic_pointer_cast<T>(pass);
+            }
+            return nullptr;
         }
 
         // Execute all passes in order

@@ -8,7 +8,7 @@ using namespace vks;
 
 IRenderPass::IRenderPass(const Device& device, const SwapChain& swapChain)
     : m_renderPass(VK_NULL_HANDLE), m_oldRenderPass(VK_NULL_HANDLE),
-      m_device(device), m_swapChain(swapChain)
+      m_device(device), m_swapChain(swapChain), m_pipelineManager(device)
 {
 }
 
@@ -20,10 +20,12 @@ IRenderPass::~IRenderPass()
 
 void IRenderPass::recreate()
 {
+    vkDeviceWaitIdle(m_device.logical());
     destroyFrameBuffers();
     m_oldRenderPass = m_renderPass;
     createRenderPass();
     createFrameBuffers();
+    pipelines().recreateAll();
 }
 
 void IRenderPass::cleanupOld()

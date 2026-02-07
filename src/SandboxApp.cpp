@@ -6,7 +6,6 @@
 #include <vks/Render/GeometryPass.hpp>
 #include <vks/ImGui/ImGuiRenderPass.hpp>
 
-#include "Log.hpp"
 #include "vks/GridMaterial.hpp"
 #include "vks/RenderObject.hpp"
 #include "vks/SpriteMaterial.hpp"
@@ -22,24 +21,9 @@ namespace vks
 
     void SandboxApp::loadAssets(Engine& engine)
     {
-        auto geometryPass = std::make_shared<GeometryPass>(
-            engine.device(),
-            engine.renderer().getSwapChain()
-        );
-
-        auto ImguiRenderPass = std::make_shared<ImGuiRenderPass>(
-            engine.device(),
-            engine.renderer().getSwapChain()
-        );
-
-
-        // Register render passes
-        engine.registerRenderPass(geometryPass);
-        engine.registerRenderPass(ImguiRenderPass);
-
-        auto cameraDescSetLayout = geometryPass->getPipeline()->getDescriptorSetLayout("camera");
+        auto cameraDescSetLayout = engine.getDescriptorSetLayout("camera");
         auto bufferInfo = engine.cameraBuffer()->descriptorInfo();
-        vks::DescriptorWriter(cameraDescSetLayout, engine.globalDescriptorPool())
+        DescriptorWriter(cameraDescSetLayout, engine.globalDescriptorPool())
             .writeBuffer(0, &bufferInfo)
             .build(engine.cameraDescriptorSet());
 
@@ -61,39 +45,29 @@ namespace vks
         assets.add<Model>("quad", std::move(quad));
 
 
-        Ref<Texture> spriteTexture = std::make_shared<vks::Texture>(
+        Ref<Texture> spriteTexture = std::make_shared<Texture>(
             engine.device(),
             "assets/textures/player.png"
         );
         assets.add<Ref<Texture>>("sprite_texture", spriteTexture);
 
-        auto& pipeline = *geometryPass->getPipeline();
-
         // --- Red material ---
         auto redMaterial = std::make_shared<ColorMaterial>(
             engine.device(),
-            pipeline,
-            engine.globalDescriptorPool(),
             "sphere",
             ColorMaterialUBO{glm::vec4{1.0f, 0.0f, 0.0f, 1.0f}}
         );
-        redMaterial->layer_priority = 0;
 
         // --- Blue material ---
         auto blueMaterial = std::make_shared<ColorMaterial>(
             engine.device(),
-            pipeline,
-            engine.globalDescriptorPool(),
             "sphere",
             ColorMaterialUBO{glm::vec4{0.0f, 122.0f / 255.0f, 1.0f, 1.0f}}
         );
-        blueMaterial->layer_priority = 0;
 
         // --- Grid material ---
         auto gridMaterial = std::make_shared<GridMaterial>(
             engine.device(),
-            pipeline,
-            engine.globalDescriptorPool(),
             "grid",
             GridMaterialUBO{
                 glm::vec4{0.0f, 0.67f, 0.78f, 1.0f},
@@ -108,20 +82,10 @@ namespace vks
         );
         gridMaterial->layer_priority = -1;
 
-        vks::SpriteMaterialUBO ubo{};
+        SpriteMaterialUBO ubo{};
         ubo.tint = glm::vec4(1.0f);
 
-        auto spriteMaterial = std::make_shared<vks::SpriteMaterial>(
-            engine.device(),
-            pipeline,
-            engine.globalDescriptorPool(),
-            spriteTexture,
-            "sprite",
-            ubo
-        );
-
-
-        // Store in asset manager
+        auto spriteMaterial = std::make_shared<SpriteMaterial>( engine.device(), spriteTexture, "sprite", ubo ); // Store in asset manager
         assets.add<Ref<Material>>("red_sphere", redMaterial);
         assets.add<Ref<Material>>("blue_sphere", blueMaterial);
         assets.add<Ref<Material>>("sprite", spriteMaterial);

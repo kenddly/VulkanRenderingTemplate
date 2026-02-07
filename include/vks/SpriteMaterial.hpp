@@ -12,8 +12,6 @@ namespace vks {
     public:
         SpriteMaterial(
             const vks::Device& device,
-            const vks::GeometryPipeline& pipelineManager,
-            Ref<vks::DescriptorPool> descriptorPool,
             std::shared_ptr<Texture> texture,
             const std::string& pipelineName = "sprite",
             SpriteMaterialUBO initialData = {}
@@ -26,8 +24,6 @@ namespace vks {
             const vks::Model* model,
             const glm::mat4& transform
         ) override;
-
-        void bind() override {}
 
     private:
         std::shared_ptr<Texture> m_texture;

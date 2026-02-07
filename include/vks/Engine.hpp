@@ -57,8 +57,10 @@ namespace vks
 
         // --- Extension Points ---
         void registerRenderPass(Ref<IRenderPass> pass);
+        Ref<DescriptorSetLayout> getDescriptorSetLayout(const std::string& name) const;
 
     private:
+        void onInit();
         void drawFrame(bool& framebufferResized);
         void updateCameraUBO();
 
@@ -79,6 +81,7 @@ namespace vks
 
         // Global GPU Resources
         Ref<DescriptorPool> m_globalDescriptorPool;
+        std::unordered_map<std::string, Ref<DescriptorSetLayout>> m_descriptorSetLayouts;
         Ref<Buffer> m_cameraUboBuffer;
         VkDescriptorSet m_cameraDescriptorSet = VK_NULL_HANDLE;
     };

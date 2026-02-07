@@ -118,11 +118,6 @@ namespace vks
             vkCmdDraw(cmd, samplesPerLine, instanceCount, 0, 0);
         }
 
-        void bind() override
-        {
-            // No special binding needed for this material
-        }
-
     private:
         int thickness = 4;
         int integratorSteps = 64;

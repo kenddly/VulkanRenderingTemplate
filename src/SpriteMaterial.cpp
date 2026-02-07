@@ -1,20 +1,21 @@
 #include <vks/SpriteMaterial.hpp>
 
+#include "vks/EngineContext.hpp"
+
 namespace vks {
 
     SpriteMaterial::SpriteMaterial(
         const vks::Device& device,
-        const vks::GeometryPipeline& pipelineManager,
-        Ref<vks::DescriptorPool> descriptorPool,
         std::shared_ptr<Texture> texture,
         const std::string& pipelineName,
         SpriteMaterialUBO initialData
     )
-        : TypedMaterial(device, pipelineManager, descriptorPool, pipelineName, sizeof(SpriteMaterialUBO)),
+        : TypedMaterial(device, pipelineName, sizeof(SpriteMaterialUBO)),
           m_texture(texture)
     {
-        Ref<DescriptorSetLayout> materialLayout =
-            pipelineManager.getDescriptorSetLayout("material");
+        auto& ce = EngineContext::get();
+        auto descriptorPool = ce.globalDescriptorPool();
+        auto materialLayout = ce.getDescriptorSetLayout("material");
 
         DescriptorWriter writer(materialLayout, descriptorPool);
 

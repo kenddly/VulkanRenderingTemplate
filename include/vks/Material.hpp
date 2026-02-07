@@ -1,7 +1,5 @@
 #pragma once
 
-#include <vks/GeometryPipeline.hpp>
-#include <vks/Descriptors.hpp>
 #include <vks/Buffer.hpp>
 
 #include <vulkan/vulkan.h>
@@ -10,7 +8,6 @@
 
 #include <string>
 #include <memory>
-#include <stdexcept>
 
 #include "Camera.hpp"
 #include "Model.hpp"
@@ -20,9 +17,7 @@ namespace vks
 // Forward declare Camera to avoid circular includes
 class Camera;
 
-// =========================================================================
-// 1. BASE MATERIAL CLASS
-// =========================================================================
+// BASE MATERIAL CLASS
 class Material {
 public:
     virtual ~Material() = default;
@@ -55,11 +50,9 @@ public:
         VkCommandBuffer cmd, 
         VkPipelineLayout layout, 
         VkDescriptorSet& lastSet,
-        const vks::Model* model, 
+        const Model* model,
         const glm::mat4& transform
     ) = 0;
-
-    virtual void bind() = 0;
 
     /**
      * @brief Type-safe helper to cast base material to derived type.
@@ -79,9 +72,7 @@ public:
 protected:
     // Protected Constructor: Only derived classes can instantiate
     Material(
-        const vks::Device& device,
-        const vks::GeometryPipeline& pipelineManager,
-        vks::Ref<vks::DescriptorPool> descriptorPool,
+        const Device& device,
         const std::string& pipelineName,
         VkDeviceSize uboSize
     );
@@ -93,12 +84,10 @@ protected:
     VkDescriptorSet m_materialDescriptorSet;
 
     // The Material owns this buffer
-    std::unique_ptr<vks::Buffer> m_uboBuffer;
+    std::unique_ptr<Buffer> m_uboBuffer;
 };
 
-// =========================================================================
-// 2. TEMPLATE WRAPPER
-// =========================================================================
+// TEMPLATE WRAPPER
 template <typename UBOStruct>
 class TypedMaterial : public Material
 {
@@ -107,12 +96,10 @@ public:
     using Material::Material; // Use parent constructors
 
     TypedMaterial(
-        const vks::Device& device,
-        const vks::GeometryPipeline& pipelineManager,
-        vks::Ref<vks::DescriptorPool> descriptorPool,
+        const Device& device,
         const std::string& pipelineName,
         UBOStruct initialData
-    ) : Material(device, pipelineManager, descriptorPool, pipelineName, sizeof(UBOStruct))
+    ) : Material(device, pipelineName, sizeof(UBOStruct))
     {
         uboData = initialData;
         flush();
@@ -125,9 +112,7 @@ public:
     }
 };
 
-// =========================================================================
-// 3. CONCRETE MATERIAL: COLOR (Standard Mesh Rendering)
-// =========================================================================
+// CONCRETE MATERIAL: COLOR (Standard Mesh Rendering)
 struct ColorMaterialUBO
 {
     alignas(16) glm::vec4 color;
@@ -145,7 +130,7 @@ public:
     }
 
     void draw(VkCommandBuffer cmd, VkPipelineLayout layout, VkDescriptorSet& lastSet,
-              const vks::Model* model, const glm::mat4& transform) override
+              const Model* model, const glm::mat4& transform) override
     {
         // 1. Bind Descriptor Set (Optimized)
         if (m_materialDescriptorSet != lastSet)
@@ -175,11 +160,6 @@ public:
 
             vkCmdDrawIndexed(cmd, model->getIndexCount(), 1, 0, 0, 0);
         }
-    }
-
-    void bind() override
-    {
-        // No additional binding needed for this simple material
     }
 };
 }
