@@ -60,13 +60,17 @@ namespace vks {
         );
 
         if (model) {
-            VkBuffer vb[] = { model->getVertexBuffer() };
-            VkDeviceSize offsets[] = { 0 };
-
-            vkCmdBindVertexBuffers(cmd, 0, 1, vb, offsets);
-            vkCmdBindIndexBuffer(cmd, model->getIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
-            vkCmdDrawIndexed(cmd, model->getIndexCount(), 1, 0, 0, 0);
+            model->bind(cmd);
         }
     }
 
+    void SpriteMaterial::drawImguiEditor()
+    {
+        TypedMaterial<SpriteMaterialUBO>::drawImguiEditor();
+        bool c = false;
+        c |= ImGui::ColorEdit4("Tint", &uboData.tint[0]);
+
+        if (c)
+            flush();
+    }
 }

@@ -152,13 +152,7 @@ public:
             vkCmdPushConstants(cmd, layout, VK_SHADER_STAGE_VERTEX_BIT,
                                0, sizeof(PushConstant), &push);
 
-            // 3. Bind Geometry & Draw
-            VkBuffer vertexBuffers[] = {model->getVertexBuffer()};
-            VkDeviceSize offsets[] = {0};
-            vkCmdBindVertexBuffers(cmd, 0, 1, vertexBuffers, offsets);
-            vkCmdBindIndexBuffer(cmd, model->getIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
-
-            vkCmdDrawIndexed(cmd, model->getIndexCount(), 1, 0, 0, 0);
+            model->bind(cmd);
         }
     }
 };

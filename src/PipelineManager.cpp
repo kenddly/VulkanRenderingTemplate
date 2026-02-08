@@ -109,7 +109,7 @@ namespace vks
         {
             auto& g = std::get<GraphicsPipelineDesc>(entry.desc.payload);
 
-            builder = std::make_unique<GraphicsPipelineBuilder>(
+        builder = std::make_unique<GraphicsPipelineBuilder>(
                 m_device,
                 g
             );

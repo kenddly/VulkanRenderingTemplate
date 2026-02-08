@@ -32,25 +32,20 @@ namespace vks
         Model& operator=(Model&&) = default;
 
         void createSphere(
-            const vks::Device& device,
-            VkCommandPool commandPool,
             float radius,
             uint32_t sectors,
             uint32_t stacks);
 
-        void createQuad(
-            const vks::Device& device,
-            VkCommandPool commandPool);
+        void createQuad();
 
         // --- Getters for the Render Loop ---
         VkBuffer getVertexBuffer() const { return m_vertexBuffer->getBuffer(); }
         VkBuffer getIndexBuffer() const { return m_indexBuffer->getBuffer(); }
         uint32_t getIndexCount() const { return m_indexCount; }
+        void bind(VkCommandBuffer cmd) const;
 
     private:
         void upload(
-            const vks::Device& device,
-            VkCommandPool commandPool,
             const std::vector<geometry::Vertex>& vertices,
             const std::vector<uint32_t>& indices);
 
@@ -59,8 +54,6 @@ namespace vks
          * This is the correct way to upload data to fast DEVICE_LOCAL memory.
          */
         void createBufferFromData(
-            const vks::Device& device,
-            VkCommandPool commandPool,
             void* data,
             VkDeviceSize size,
             VkBufferUsageFlags usage,

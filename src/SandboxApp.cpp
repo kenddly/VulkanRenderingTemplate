@@ -30,26 +30,24 @@ namespace vks
         auto& assets = engine.assets();
 
         Model sphere{};
-        sphere.createSphere(
-            engine.device(),
-            engine.commandPool().handle(),
-            1.0f, 32, 16
-        );
-        assets.add<Model>("sphere", std::move(sphere));
-
+        sphere.createSphere(1.0f, 32, 16);
         Model quad{};
-        quad.createQuad(
-            engine.device(),
-            engine.commandPool().handle()
-        );
-        assets.add<Model>("quad", std::move(quad));
+        quad.createQuad();
 
+        assets.add<Model>("sphere", std::move(sphere));
+        assets.add<Model>("quad", std::move(quad));
 
         Ref<Texture> spriteTexture = std::make_shared<Texture>(
             engine.device(),
             "assets/textures/player.png"
         );
+        Ref<Texture> spongeBobTexture = std::make_shared<Texture>(
+            engine.device(),
+            "assets/textures/Spongebobplush.png"
+        );
+
         assets.add<Ref<Texture>>("sprite_texture", spriteTexture);
+        assets.add<Ref<Texture>>("spongebob_texture", spongeBobTexture);
 
         // --- Red material ---
         auto redMaterial = std::make_shared<ColorMaterial>(
@@ -85,7 +83,7 @@ namespace vks
         SpriteMaterialUBO ubo{};
         ubo.tint = glm::vec4(1.0f);
 
-        auto spriteMaterial = std::make_shared<SpriteMaterial>( engine.device(), spriteTexture, "sprite", ubo ); // Store in asset manager
+        auto spriteMaterial = std::make_shared<SpriteMaterial>( engine.device(), spongeBobTexture, "sprite", ubo ); // Store in asset manager
         assets.add<Ref<Material>>("red_sphere", redMaterial);
         assets.add<Ref<Material>>("blue_sphere", blueMaterial);
         assets.add<Ref<Material>>("sprite", spriteMaterial);

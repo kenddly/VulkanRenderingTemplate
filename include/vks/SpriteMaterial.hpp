@@ -25,6 +25,8 @@ namespace vks {
             const glm::mat4& transform
         ) override;
 
+        void drawImguiEditor() override;
+
     private:
         std::shared_ptr<Texture> m_texture;
     };

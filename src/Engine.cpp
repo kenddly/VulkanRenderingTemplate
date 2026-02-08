@@ -130,7 +130,6 @@ namespace vks
         gridPipelineDesc.depthTest = true;
         gridPipelineDesc.depthWrite = false;
         gridPipelineDesc.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-        gridPipelineDesc.subpass = 0;
         gridPipelineDesc.viewportExtent = renderer().getSwapChain().extent();
         gridPipelineDesc.dynamicStates.push_back(VK_DYNAMIC_STATE_LINE_WIDTH);
 
@@ -145,7 +144,6 @@ namespace vks
         spherePipelineDesc.depthTest = true;
         spherePipelineDesc.depthWrite = true;
         spherePipelineDesc.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-        spherePipelineDesc.subpass = 0;
         spherePipelineDesc.viewportExtent = renderer().getSwapChain().extent();
 
         // Sprite pipeline
@@ -157,9 +155,8 @@ namespace vks
         spritePipelineDesc.cull = VK_CULL_MODE_NONE;
         spritePipelineDesc.depthCompare = VK_COMPARE_OP_LESS;
         spritePipelineDesc.depthTest = true;
-        spritePipelineDesc.depthWrite = false;
+        spritePipelineDesc.depthWrite = true;
         spritePipelineDesc.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-        spritePipelineDesc.subpass = 0;
         spritePipelineDesc.viewportExtent = renderer().getSwapChain().extent();
 
         PipelineDesc gridPipelineDesc_{};
