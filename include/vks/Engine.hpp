@@ -14,6 +14,7 @@
 #include <vks/Scene.hpp>
 #include <vks/Render/RenderGraph.hpp>
 #include <vks/Buffer.hpp>
+#include <vks/UI/EngineEditor.hpp>
 
 
 namespace vks
@@ -64,6 +65,8 @@ namespace vks
         void drawFrame(bool& framebufferResized);
         void updateCameraUBO();
 
+        void onImGui();
+
         // Core
         Instance m_instance;
         DebugUtilsMessenger m_debugMessenger;
@@ -84,5 +87,8 @@ namespace vks
         std::unordered_map<std::string, Ref<DescriptorSetLayout>> m_descriptorSetLayouts;
         Ref<Buffer> m_cameraUboBuffer;
         VkDescriptorSet m_cameraDescriptorSet = VK_NULL_HANDLE;
+
+        // Editor Mode (Enables ImGui and other editor features)
+        EngineEditor m_editor;
     };
 }

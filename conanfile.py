@@ -11,7 +11,7 @@ class VulkanRenderingTemplate(ConanFile):
     settings = "os", "arch", "compiler", "build_type"
 
     def requirements(self):
-        self.requires("imgui/1.92.4")
+        self.requires("imgui/1.92.5-docking")
         self.requires("glfw/3.4")
         self.requires("glm/1.0.1")
         self.requires("glslang/1.4.313.0")

@@ -21,7 +21,9 @@ namespace vks
           m_device(m_instance, m_window, Instance::DeviceExtensions),
           m_swapChain(m_device, m_window),
           m_commandPool(m_device, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT),
-          m_renderGraph(m_device, m_swapChain, m_commandPool)
+          m_renderGraph(m_device, m_swapChain, m_commandPool),
+          m_editor(*this)
+
     {
         // Camera
         m_camera.init(
@@ -190,6 +192,8 @@ namespace vks
         geometryPass->pipelines().createOrReplace("grid", gridPipelineDesc_);
         geometryPass->pipelines().createOrReplace("sphere", spherePipelineDesc_);
         geometryPass->pipelines().createOrReplace("sprite", spritePipelineDesc_);
+
+        m_editor.onInit();
     }
 
     void Engine::run(Application& app)
@@ -215,6 +219,11 @@ namespace vks
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
 
+            auto flags = ImGuiDockNodeFlags_PassthruCentralNode;
+            ImGui::DockSpaceOverViewport(0, nullptr, flags);
+
+            m_editor.onGui();
+
             app.onImGui();
 
             ImGui::Render();
@@ -225,5 +234,9 @@ namespace vks
 
         m_window.mainLoop();
         vkDeviceWaitIdle(m_device.logical());
+    }
+
+    void Engine::onImGui()
+    {
     }
 }

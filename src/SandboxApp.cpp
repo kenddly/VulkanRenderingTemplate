@@ -159,20 +159,5 @@ namespace vks
 
     void SandboxApp::onImGui()
     {
-        ImGui::Begin("Sandbox");
-        auto& renderObjects = EngineContext::get().scene().objects();
-
-        for (auto& pair : renderObjects)
-        {
-            auto& obj = pair.second;
-
-            if (ImGui::TreeNode(pair.first.c_str()))
-            {
-                obj.drawImguiEditor();
-                ImGui::TreePop();
-            }
-        }
-
-        ImGui::End();
     }
 }

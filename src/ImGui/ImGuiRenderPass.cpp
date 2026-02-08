@@ -23,7 +23,8 @@ ImGuiRenderPass::ImGuiRenderPass(const Device &device,
     ImGuiIO &io = ImGui::GetIO();
     io.Fonts->AddFontFromFileTTF("assets/fonts/ClearSans-Regular.ttf");
     io.FontGlobalScale = 2.0f;
-    
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
 
