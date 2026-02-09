@@ -40,8 +40,8 @@ find_package(Vulkan REQUIRED)
 # ---------------------------
 # Source files
 # ---------------------------
-file(GLOB_RECURSE PROJECT_SOURCES "${CMAKE_SOURCE_DIR}/src/*.cpp" "${CMAKE_SOURCE_DIR}/bindings/*.cpp")
-file(GLOB_RECURSE PROJECT_HEADERS "${CMAKE_SOURCE_DIR}/include/*.hpp" "${CMAKE_SOURCE_DIR}/bindings/*.h")
+file(GLOB_RECURSE PROJECT_SOURCES "${CMAKE_SOURCE_DIR}/src/*/*.cpp" "${CMAKE_SOURCE_DIR}/bindings/*.cpp")
+file(GLOB_RECURSE PROJECT_HEADERS "${CMAKE_SOURCE_DIR}/include/*/*.hpp" "${CMAKE_SOURCE_DIR}/bindings/*.h")
 
 # ---------------------------
 # Create main library
@@ -49,8 +49,8 @@ file(GLOB_RECURSE PROJECT_HEADERS "${CMAKE_SOURCE_DIR}/include/*.hpp" "${CMAKE_S
 add_library(${PROJECT_NAME} OBJECT
     ${PROJECT_SOURCES}
     ${PROJECT_HEADERS}
-        include/vks/Engine.hpp
-        src/Engine.cpp
+        include/app/Engine.hpp
+        src/app/Engine.cpp
 )
 
 target_include_directories(${PROJECT_NAME}

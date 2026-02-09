@@ -1,8 +1,8 @@
 #include <iostream>
 
-#include <vks/Engine.hpp>
-#include <SandboxApp.hpp>
-#include <Log.hpp>
+#include <../include/app/Engine.hpp>
+#include <../include/app/SandboxApp.hpp>
+#include <../include/core/Log.hpp>
 
 int main()
 {
