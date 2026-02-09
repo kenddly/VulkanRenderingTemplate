@@ -7,7 +7,7 @@ public:
     RenderObject();
 
     vks::Model* model;
-    vks::Material* material;
+    vks::Ref<vks::Material> material;
     glm::mat4 transform;
 
     glm::vec3 position = glm::vec3(0.0f);

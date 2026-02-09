@@ -5,7 +5,6 @@
 namespace vks {
 
     Material::Material(
-        const vks::Device& device,
         const std::string& pipelineName,
         VkDeviceSize uboSize
     ) : m_pipelineName(pipelineName),
@@ -17,7 +16,7 @@ namespace vks {
 
         // 2. Create the Uniform Buffer
         m_uboBuffer = std::make_unique<vks::Buffer>(
-            device,
+            ec.device(),
             uboSize,
             VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT

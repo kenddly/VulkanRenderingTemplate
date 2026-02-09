@@ -27,6 +27,7 @@ namespace vks {
 
         uint32_t mipLevels() const { return m_mipLevels; }
 
+        const std::string path;
     private:
         void createTextureImage(const std::string& filepath);
         void createImageView();

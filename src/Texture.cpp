@@ -15,7 +15,8 @@ namespace vks
         const std::string& filepath,
         bool generateMipmaps
     )
-        : m_device(device)
+        : m_device(device),
+            path(filepath)
     {
         createTextureImage(filepath);
         createImageView();

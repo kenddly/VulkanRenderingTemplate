@@ -48,7 +48,7 @@ namespace vks {
 
             // 1. Mouse Wheel Zoom
             if (io.MouseWheel != 0.0f) {
-                zoomDelta += io.MouseWheel * 5.0f; // Speed factor
+                zoomDelta += io.MouseWheel * 10.0f; // Speed factor
             }
 
             // 2. Keyboard Zoom (+ and -)

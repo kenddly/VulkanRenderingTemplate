@@ -6,10 +6,11 @@
 #include <vks/Render/GeometryPass.hpp>
 #include <vks/ImGui/ImGuiRenderPass.hpp>
 
-#include "vks/GridMaterial.hpp"
-#include "vks/RenderObject.hpp"
-#include "vks/SpriteMaterial.hpp"
-#include "vks/Texture.hpp"
+#include <vks/Texture.hpp>
+#include <vks/ColorMaterial.hpp>
+#include <vks/GridMaterial.hpp>
+#include <vks/RenderObject.hpp>
+#include <vks/SpriteMaterial.hpp>
 
 namespace vks
 {
@@ -51,21 +52,18 @@ namespace vks
 
         // --- Red material ---
         auto redMaterial = std::make_shared<ColorMaterial>(
-            engine.device(),
             "sphere",
             ColorMaterialUBO{glm::vec4{1.0f, 0.0f, 0.0f, 1.0f}}
         );
 
         // --- Blue material ---
         auto blueMaterial = std::make_shared<ColorMaterial>(
-            engine.device(),
             "sphere",
             ColorMaterialUBO{glm::vec4{0.0f, 122.0f / 255.0f, 1.0f, 1.0f}}
         );
 
         // --- Grid material ---
         auto gridMaterial = std::make_shared<GridMaterial>(
-            engine.device(),
             "grid",
             GridMaterialUBO{
                 glm::vec4{0.0f, 0.67f, 0.78f, 1.0f},
@@ -83,7 +81,7 @@ namespace vks
         SpriteMaterialUBO ubo{};
         ubo.tint = glm::vec4(1.0f);
 
-        auto spriteMaterial = std::make_shared<SpriteMaterial>( engine.device(), spongeBobTexture, "sprite", ubo ); // Store in asset manager
+        auto spriteMaterial = std::make_shared<SpriteMaterial>( spongeBobTexture, "sprite", ubo ); // Store in asset manager
         assets.add<Ref<Material>>("red_sphere", redMaterial);
         assets.add<Ref<Material>>("blue_sphere", blueMaterial);
         assets.add<Ref<Material>>("sprite", spriteMaterial);
@@ -100,9 +98,7 @@ namespace vks
             auto& obj = scene.create("red_sphere");
 
             obj.model = &assets.get<Model>("sphere");
-            obj.material = assets
-                           .get<Ref<Material>>("red_sphere")
-                           .get();
+            obj.material = assets.get<Ref<Material>>("red_sphere");
 
             obj.transform = glm::translate(
                 glm::mat4(1.0f),
@@ -115,9 +111,7 @@ namespace vks
             auto& obj = scene.create("blue_sphere");
 
             obj.model = &assets.get<Model>("sphere");
-            obj.material = assets
-                           .get<Ref<Material>>("blue_sphere")
-                           .get();
+            obj.material = assets.get<Ref<Material>>("blue_sphere");
 
             obj.transform = glm::translate(
                 glm::mat4(1.0f),
@@ -130,9 +124,7 @@ namespace vks
             auto& obj = scene.create("grid");
 
             obj.model = nullptr; // Procedural
-            obj.material = assets
-                           .get<Ref<Material>>("grid")
-                           .get();
+            obj.material = assets.get<Ref<Material>>("grid");
 
             obj.transform = glm::mat4(1.0f);
         }
@@ -142,14 +134,19 @@ namespace vks
             auto& obj = scene.create("sprite");
 
             obj.model = &assets.get<Model>("quad"); // Reuse quad model
-            obj.material = assets
-                           .get<Ref<Material>>("sprite")
-                           .get();
+            obj.material = assets.get<Ref<Material>>("sprite");
 
             obj.transform = glm::translate(
                 glm::mat4(1.0f),
                 glm::vec3{-2.0f, 0.0f, 0.0f}
             );
+        }
+        // SPRITE
+        {
+            auto& obj = scene.create("sprite2");
+
+            obj.model = &assets.get<Model>("quad"); // Reuse quad model
+            obj.material = assets.get<Ref<Material>>("sprite")->clone();
         }
     }
 

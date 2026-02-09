@@ -10,8 +10,8 @@ namespace vks {
 
     class SpriteMaterial : public TypedMaterial<SpriteMaterialUBO> {
     public:
+        void buildDescriptorSet();
         SpriteMaterial(
-            const vks::Device& device,
             std::shared_ptr<Texture> texture,
             const std::string& pipelineName = "sprite",
             SpriteMaterialUBO initialData = {}
@@ -26,9 +26,12 @@ namespace vks {
         ) override;
 
         void drawImguiEditor() override;
+        Ref<Material> clone() const override;
+
+
+        void setTexture(const std::shared_ptr<Texture>& newTexture);
 
     private:
         std::shared_ptr<Texture> m_texture;
     };
-
 }

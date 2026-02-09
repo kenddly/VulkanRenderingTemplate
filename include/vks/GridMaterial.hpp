@@ -56,7 +56,7 @@ namespace vks
             for (auto& pair : renderObjects)
             {
                 auto& obj = pair.second;
-                if (obj.material == this)
+                if (obj.material.get() == this)
                     continue;
 
                 Sphere sphere{};
