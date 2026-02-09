@@ -53,16 +53,14 @@ namespace vks
 
     void SpriteMaterial::drawImguiEditor()
     {
-        // 1. Draw Tint Color Picker
+        // Draw Tint Color Picker
         bool c = false;
         c |= ImGui::ColorEdit4("Tint", &uboData.tint[0]);
         if (c) flush();
 
-        ImGui::Separator();
-
-        // 2. Texture Slot UI
+        ImGui::BeginGroup();
         ImGui::Text("Sprite Texture:");
-
+        ImGui::SameLine();
         ImTextureID iconId = EditorResourceManager::Instance().getIcon(m_texture->path);
         ImGui::Image(
             iconId,
@@ -70,7 +68,20 @@ namespace vks
             ImVec2(0, 0),
             ImVec2(1, 1)
         );
-        ImGui::Text("Image");
+
+        ImDrawList* drawList = ImGui::GetWindowDrawList();
+        ImVec2 min = ImGui::GetItemRectMin();
+        ImVec2 max = ImGui::GetItemRectMax();
+        drawList->AddRect(
+            ImVec2(min.x - 2, min.y - 2),
+            ImVec2(max.x + 2, max.y + 2),
+            IM_COL32(255, 255, 255, 255),
+            2.0f,
+            0,
+            2.0f
+        );
+
+        ImGui::EndGroup();
 
         // DRAG AND DROP TARGET
         if (ImGui::BeginDragDropTarget())

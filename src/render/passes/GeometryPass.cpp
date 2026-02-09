@@ -124,7 +124,7 @@ void GeometryPass::record(VkCommandBuffer cmdBuffer, uint32_t imageIndex)
             cmdBuffer,
             layout,
             lastMaterialSet, // Passed by reference so material can update cache
-            renderObject.model,
+            renderObject.model.get(),
             renderObject.transform
         );
     }

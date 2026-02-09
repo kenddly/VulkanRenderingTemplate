@@ -16,8 +16,7 @@ namespace vks
     class Model
     {
     public:
-        /**
-         * @brief Default constructor for creating an empty model.
+        /** @brief Default constructor for creating an empty model.
          */
         Model() = default;
         ~Model() = default;

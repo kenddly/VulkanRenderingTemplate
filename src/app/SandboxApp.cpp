@@ -29,13 +29,13 @@ namespace vks
 
         auto& assets = engine.assets();
 
-        Model sphere{};
-        sphere.createSphere(1.0f, 32, 16);
-        Model quad{};
-        quad.createQuad();
+        Ref<Model> sphere = std::make_shared<Model>();
+        sphere->createSphere(1.0f, 32, 16);
+        Ref<Model> quad = std::make_shared<Model>();
+        quad->createQuad();
 
-        assets.add<Model>("sphere", std::move(sphere));
-        assets.add<Model>("quad", std::move(quad));
+        assets.add<Ref<Model>>("sphere", sphere);
+        assets.add<Ref<Model>>("quad", quad);
 
         Ref<Texture> spriteTexture = std::make_shared<Texture>(
             engine.device(),
@@ -96,25 +96,12 @@ namespace vks
         {
             auto& obj = scene.create("red_sphere");
 
-            obj.model = &assets.get<Model>("sphere");
+            obj.model = assets.get<Ref<Model>>("sphere");
             obj.material = assets.get<Ref<Material>>("red_sphere");
 
             obj.transform = glm::translate(
                 glm::mat4(1.0f),
                 glm::vec3{0.0f, 0.0f, 0.0f}
-            );
-        }
-
-        // BLUE SPHERE
-        {
-            auto& obj = scene.create("blue_sphere");
-
-            obj.model = &assets.get<Model>("sphere");
-            obj.material = assets.get<Ref<Material>>("blue_sphere");
-
-            obj.transform = glm::translate(
-                glm::mat4(1.0f),
-                glm::vec3{2.0f, 0.0f, 0.0f}
             );
         }
 
@@ -132,7 +119,7 @@ namespace vks
         {
             auto& obj = scene.create("sprite");
 
-            obj.model = &assets.get<Model>("quad"); // Reuse quad model
+            obj.model = assets.get<Ref<Model>>("quad"); // Reuse quad model
             obj.material = assets.get<Ref<Material>>("sprite");
 
             obj.transform = glm::translate(
@@ -144,7 +131,7 @@ namespace vks
         {
             auto& obj = scene.create("sprite2");
 
-            obj.model = &assets.get<Model>("quad"); // Reuse quad model
+            obj.model = assets.get<Ref<Model>>("quad"); // Reuse quad model
             obj.material = assets.get<Ref<Material>>("sprite")->clone();
         }
     }

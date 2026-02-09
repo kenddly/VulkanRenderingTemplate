@@ -6,7 +6,7 @@ class RenderObject
 public:
     RenderObject();
 
-    vks::Model* model;
+    vks::Ref<vks::Model> model;
     vks::Ref<vks::Material> material;
     glm::mat4 transform;
 
