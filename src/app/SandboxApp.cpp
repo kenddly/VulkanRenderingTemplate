@@ -94,45 +94,36 @@ namespace vks
 
         // RED SPHERE
         {
-            auto& obj = scene.create("red_sphere");
+            auto obj = scene.createEntity("red_sphere");
+            auto transform = scene.getComponent<Transform>(obj);
+            transform.transform = glm::mat4(1.0f);
 
-            obj.model = assets.get<Ref<Model>>("sphere");
-            obj.material = assets.get<Ref<Material>>("red_sphere");
-
-            obj.transform = glm::translate(
-                glm::mat4(1.0f),
-                glm::vec3{0.0f, 0.0f, 0.0f}
-            );
+            auto& renderable = scene.addComponent<Renderable>(obj);
+            renderable.model = assets.get<Ref<Model>>("sphere");
+            renderable.material = assets.get<Ref<Material>>("red_sphere");
         }
 
         // GRID
         {
-            auto& obj = scene.create("grid");
+            auto obj = scene.createEntity("grid");
 
-            obj.model = nullptr; // Procedural
-            obj.material = assets.get<Ref<Material>>("grid");
-
-            obj.transform = glm::mat4(1.0f);
+            auto& renderable = scene.addComponent<Renderable>(obj);
+            renderable.model = nullptr; // Procedural, no model
+            renderable.material = assets.get<Ref<Material>>("grid");
         }
 
         // SPRITE
         {
-            auto& obj = scene.create("sprite");
-
-            obj.model = assets.get<Ref<Model>>("quad"); // Reuse quad model
-            obj.material = assets.get<Ref<Material>>("sprite");
-
-            obj.transform = glm::translate(
+            auto obj = scene.createEntity("sprite");
+            auto transform = scene.getComponent<Transform>(obj);
+            transform.transform = glm::translate(
                 glm::mat4(1.0f),
                 glm::vec3{-2.0f, 0.0f, 0.0f}
             );
-        }
-        // SPRITE
-        {
-            auto& obj = scene.create("sprite2");
 
-            obj.model = assets.get<Ref<Model>>("quad"); // Reuse quad model
-            obj.material = assets.get<Ref<Material>>("sprite")->clone();
+            auto& renderable = scene.addComponent<Renderable>(obj);
+            renderable.model = assets.get<Ref<Model>>("quad"); // Reuse quad model
+            renderable.material = assets.get<Ref<Material>>("sprite");
         }
     }
 

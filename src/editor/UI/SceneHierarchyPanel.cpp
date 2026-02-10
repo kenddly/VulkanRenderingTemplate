@@ -3,6 +3,11 @@
 
 #include <app/Engine.hpp>
 
+#include <editor/UI/components/Name.hpp>
+#include <editor/UI/components/RigidBody.hpp>
+#include <editor/UI/components/Transform.hpp>
+#include <editor/UI/components/Renderable.hpp>
+
 namespace vks
 {
     void SceneHierarchyPanel::onGui()
@@ -11,19 +16,27 @@ namespace vks
 
         ImGui::Begin(getTitle(), &isOpen);
 
-        // Access scene via the Engine reference passed in constructor
-        auto& renderObjects = m_engine.scene().objects();
+        auto& scene = m_engine.scene();
+        auto renderObjects = scene.view<Transform, Name>();
 
-        for (auto& pair : renderObjects)
+        for (auto& object : renderObjects)
         {
-            // Unique ID generation for ImGui based on map key
-            ImGui::PushID(pair.first.c_str());
+            auto [transform, name] = renderObjects.get<Transform, Name>(object);
+            auto cname = name.value.c_str();
 
-            if (ImGui::TreeNode(pair.first.c_str()))
+            // Unique ID generation for ImGui based on map key
+            ImGui::PushID(cname);
+
+            if (ImGui::TreeNode(cname))
             {
-                // We delegate the specific object drawing to the object itself
-                // Or we could have an "InspectorPanel" handle this part
-                pair.second.drawImguiEditor();
+                ComponentUI<Name>::draw(scene, object);
+                ComponentUI<Transform>::draw(scene, object);
+
+                if (scene.hasComponent<Renderable>(object))
+                    ComponentUI<Renderable>::draw(scene, object);
+                if (scene.hasComponent<RigidBody>(object))
+                    ComponentUI<RigidBody>::draw(scene, object);
+
                 ImGui::TreePop();
             }
 

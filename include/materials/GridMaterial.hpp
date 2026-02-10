@@ -49,19 +49,20 @@ namespace vks
 
         void update() override
         {
-            auto& renderObjects = EngineContext::get().scene().objects();
+            auto renderObjects = EngineContext::get().scene().view<Renderable, Transform, RigidBody>();
             uboData.sphereCount = 0;
-            for (auto& pair : renderObjects)
+            for (auto obj : renderObjects)
             {
-                auto& obj = pair.second;
-                if (obj.material.get() == this)
+                auto [renderable, transform, rigidBody] = renderObjects.get<Renderable, Transform, RigidBody>(obj);
+
+                if (renderable.material.get() == this)
                     continue;
 
                 Sphere sphere{};
-                sphere.center = obj.position;
+                sphere.center = transform.position;
                 sphere.center.y *= -1.0f; // Invert Y for our coordinate system
-                sphere.radius = obj.scale.x * 0.5f; // Assuming uniform scale
-                sphere.mass = obj.mass;
+                sphere.radius = transform.scale.x * 0.5f; // Assuming uniform scale
+                sphere.mass = rigidBody.mass;
 
                 if (uboData.sphereCount < MAX_SPHERES)
                 {

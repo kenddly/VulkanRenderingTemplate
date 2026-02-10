@@ -5,11 +5,9 @@
 #include <memory>
 #include <unordered_map>
 #include <vector>
+#include <core/types.hpp>
 
 namespace vks {
-
-template<typename T>
-using Ref = std::shared_ptr<T>;
 
 class DescriptorSetLayout;
 class DescriptorPool;

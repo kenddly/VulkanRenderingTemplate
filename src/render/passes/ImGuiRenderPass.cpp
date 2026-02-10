@@ -1,12 +1,12 @@
 #include <iostream>
 #include <gfx/Device.hpp>
-#include <editor/ImGui/ImGuiRenderPass.hpp>
 #include <gfx/SwapChain.hpp>
+#include <app/EngineContext.hpp>
+#include <render/passes/IRenderPass.hpp>
+#include <render/passes/ImGuiRenderPass.hpp>
 
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_vulkan.h>
-#include <app/EngineContext.hpp>
-#include <render/passes/IRenderPass.hpp>
 
 using namespace vks;
 

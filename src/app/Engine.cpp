@@ -9,7 +9,7 @@
 #include <glm/glm.hpp>
 
 #include "../../include/app/EngineContext.hpp"
-#include "../../include/editor/ImGui/ImGuiRenderPass.hpp"
+#include "../../include/render/passes/ImGuiRenderPass.hpp"
 #include "../../include/render/passes/GeometryPass.hpp"
 
 namespace vks
@@ -130,7 +130,7 @@ namespace vks
         gridPipelineDesc.cull = VK_CULL_MODE_NONE;
         gridPipelineDesc.depthCompare = VK_COMPARE_OP_LESS;
         gridPipelineDesc.depthTest = true;
-        gridPipelineDesc.depthWrite = false;
+        gridPipelineDesc.depthWrite = true;
         gridPipelineDesc.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
         gridPipelineDesc.viewportExtent = renderer().getSwapChain().extent();
         gridPipelineDesc.dynamicStates.push_back(VK_DYNAMIC_STATE_LINE_WIDTH);

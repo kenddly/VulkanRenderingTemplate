@@ -5,14 +5,15 @@
 #include <array>
 #include <iostream>
 
-#include "core/Log.hpp"
-#include "app/EngineContext.hpp"
-#include "assets/ShaderCompiler.hpp"
-#include "render/passes/IRenderPass.hpp"
+#include <core/Log.hpp>
+#include <app/EngineContext.hpp>
+#include <materials/Material.hpp>
+#include <assets/ShaderCompiler.hpp>
+#include <render/passes/IRenderPass.hpp>
 
 using namespace vks;
 
-GeometryPass::GeometryPass(const Device &device, const SwapChain &swapChain)
+GeometryPass::GeometryPass(const Device& device, const SwapChain& swapChain)
     : vks::IRenderPass(device, swapChain)
 {
     GeometryPass::createRenderPass();
@@ -23,13 +24,13 @@ GeometryPass::GeometryPass(const Device &device, const SwapChain &swapChain)
         auto& ec = EngineContext::get();
         ec.renderer().recreate();
     });
-    
-    FileWatcher::Callback callback = [&](const std::filesystem::path &path)
+
+    FileWatcher::Callback callback = [&](const std::filesystem::path& path)
     {
         std::cout << "Shader changed: " << path << ", recompiling..." << std::endl;
         m_shaderCompiler->requestCompile(path);
     };
-    
+
     m_fileWatcher.watchDirectory("assets/shaders/", {".frag", ".vert"}, false, callback);
 }
 
@@ -73,9 +74,9 @@ void GeometryPass::record(VkCommandBuffer cmdBuffer, uint32_t imageIndex)
 
     // Get Scene Data
     auto& ce = EngineContext::get();
-    auto renderObjects = ce.scene().objects();
+    auto renderObjects = ce.scene().view<Renderable, Transform>();
+
     VkDescriptorSet cameraSet = ce.cameraDescriptorSet();
-    const auto& camera = ce.camera(); // Need this for Grid
 
     // Sort (Optimization)
     // TODO: Reimplement this somehow
@@ -86,10 +87,12 @@ void GeometryPass::record(VkCommandBuffer cmdBuffer, uint32_t imageIndex)
     //           });
 
     // Bind Global Camera Set (Set 0)
-    if (cameraSet != VK_NULL_HANDLE && !renderObjects.empty())
+    if (cameraSet != VK_NULL_HANDLE && renderObjects.size_hint() != 0)
     {
-        auto renderObject = renderObjects.begin();
-        auto layoutName = renderObject->second.material->getPipelineName();
+        auto firstObject = renderObjects.begin();
+        const auto renderable = renderObjects.get<Renderable>(*firstObject);
+
+        auto layoutName = renderable.material->getPipelineName();
         auto layout = pipelines().getLayout(layoutName);
         vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                                 layout, 0, 1, &cameraSet, 0, nullptr);
@@ -101,8 +104,9 @@ void GeometryPass::record(VkCommandBuffer cmdBuffer, uint32_t imageIndex)
 
     for (const auto& obj : renderObjects)
     {
-        auto& renderObject = obj.second;
-        auto pipelineName = renderObject.material->getPipelineName();
+        auto [renderable, transform] = renderObjects.get<Renderable, Transform>(obj);
+
+        auto pipelineName = renderable.material->getPipelineName();
         VkPipeline pipeline = pipelines().getPipeline(pipelineName);
         VkPipelineLayout layout = pipelines().getLayout(pipelineName);
 
@@ -120,12 +124,12 @@ void GeometryPass::record(VkCommandBuffer cmdBuffer, uint32_t imageIndex)
             }
         }
 
-        renderObject.material->draw(
+        renderable.material->draw(
             cmdBuffer,
             layout,
             lastMaterialSet, // Passed by reference so material can update cache
-            renderObject.model.get(),
-            renderObject.transform
+            renderable.model.get(),
+            transform.transform
         );
     }
 

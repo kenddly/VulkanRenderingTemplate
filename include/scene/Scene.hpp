@@ -1,31 +1,65 @@
 #pragma once
 
-#include <unordered_map>
 #include <string>
-#include <render/RenderObject.hpp>
+#include <entt/entt.hpp>
+#include <scene/Components.hpp>
 
-namespace vks {
+namespace vks
+{
+    using Entity = entt::entity;
 
-    class Scene {
+    class Scene
+    {
     public:
-        using ObjectMap = std::unordered_map<std::string, RenderObject>;
+        Entity createEntity(const std::string& name = {})
+        {
+            auto e = m_registry.create();
 
-        RenderObject& create(const std::string& name) {
-            return m_objects[name];
+            if (!name.empty())
+                m_registry.emplace<Name>(e, name);
+
+            m_registry.emplace<Transform>(e);
+            return e;
         }
 
-        RenderObject* find(const std::string& name) {
-            auto it = m_objects.find(name);
-            return it != m_objects.end() ? &it->second : nullptr;
+        void destroyEntity(entt::entity e)
+        {
+            m_registry.destroy(e);
         }
 
-        const ObjectMap& objects() const { return m_objects; }
-        ObjectMap& objects() { return m_objects; }
+        template <typename Component, typename... Args>
+        Component& addComponent(entt::entity e, Args&&... args)
+        {
+            return m_registry.emplace<Component>(e, std::forward<Args>(args)...);
+        }
 
-        void clear() { m_objects.clear(); }
+        template <typename Component>
+        Component& getComponent(entt::entity e)
+        {
+            return m_registry.get<Component>(e);
+        }
+
+        template <typename... Components>
+        auto view()
+        {
+            return m_registry.view<Components...>();
+        }
+
+        template <typename... Components>
+        bool hasComponent(entt::entity e)
+        {
+            return m_registry.all_of<Components...>(e);
+        }
+
+        entt::registry& getRegistry() { return m_registry; }
+        const entt::registry& getRegistry() const { return m_registry; }
+
+        void clear()
+        {
+            m_registry.clear();
+        }
 
     private:
-        ObjectMap m_objects;
+        entt::registry m_registry;
     };
-
 }

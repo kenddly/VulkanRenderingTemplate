@@ -19,6 +19,7 @@ namespace vks
         Lighting,
         PostProcess,
         ImGui,
+        Editor,
         Custom
     };
 
