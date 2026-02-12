@@ -11,6 +11,7 @@
 #include "../../include/app/EngineContext.hpp"
 #include "../../include/render/passes/ImGuiRenderPass.hpp"
 #include "../../include/render/passes/GeometryPass.hpp"
+#include "render/passes/UIPass.hpp"
 
 namespace vks
 {
@@ -114,8 +115,14 @@ namespace vks
             renderer().getSwapChain()
         );
 
+        auto uiPass = std::make_shared<UIPass>(
+            device(),
+            renderer().getSwapChain()
+        );
+
         registerRenderPass(geometryPass);
         registerRenderPass(imguiPass);
+        registerRenderPass(uiPass);
 
         // Create pipelines
 
@@ -192,6 +199,35 @@ namespace vks
         geometryPass->pipelines().createOrReplace("grid", gridPipelineDesc_);
         geometryPass->pipelines().createOrReplace("sphere", spherePipelineDesc_);
         geometryPass->pipelines().createOrReplace("sprite", spritePipelineDesc_);
+
+
+        GraphicsPipelineDesc uiPipelineDesc{};
+        uiPipelineDesc.renderPass = uiPass->handle();
+        uiPipelineDesc.vertexShader = "assets/shaders/objectPicking.vert.spv";
+        uiPipelineDesc.fragmentShader = "assets/shaders/objectPicking.frag.spv";
+        uiPipelineDesc.alphaBlending = false;
+        uiPipelineDesc.cull = VK_CULL_MODE_NONE;
+        uiPipelineDesc.depthCompare = VK_COMPARE_OP_LESS;
+        uiPipelineDesc.depthTest = true;
+        uiPipelineDesc.depthWrite = false; // Important for UI
+        uiPipelineDesc.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+        uiPipelineDesc.viewportExtent = renderer().getSwapChain().extent();
+
+        PipelineDesc uiPipelineDesc_{};
+        uiPipelineDesc_.type = PipelineType::Graphics;
+        uiPipelineDesc_.payload = uiPipelineDesc;
+        uiPipelineDesc_.setLayouts = {
+            m_descriptorSetLayouts["camera"]->getDescriptorSetLayout()
+        };
+        uiPipelineDesc_.pushConstants = {
+            VkPushConstantRange{
+                .stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+                .offset = 0,
+                .size = sizeof(glm::mat4) + sizeof(entt::entity)
+            },
+        };
+
+        uiPass->pipelines().createOrReplace("ObjectPicker", uiPipelineDesc_);
 
         m_editor.onInit();
     }

@@ -20,7 +20,7 @@ namespace vks {
         void draw(
             VkCommandBuffer cmd,
             VkPipelineLayout layout,
-            VkDescriptorSet& lastSet,
+            VkDescriptorSet lastSet,
             const vks::Model* model,
             const glm::mat4& transform
         ) override;

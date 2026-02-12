@@ -16,7 +16,7 @@ namespace vks
 
         void drawImguiEditor() override;
 
-        void draw(VkCommandBuffer cmd, VkPipelineLayout layout, VkDescriptorSet& lastSet,
+        void draw(VkCommandBuffer cmd, VkPipelineLayout layout, VkDescriptorSet lastSet,
                   const Model* model, const glm::mat4& transform) override;
 
         std::shared_ptr<Material> clone() const override;

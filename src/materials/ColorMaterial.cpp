@@ -6,7 +6,7 @@ void vks::ColorMaterial::drawImguiEditor()
     if (ImGui::ColorEdit4("Base Color", &uboData.color[0])) flush();
 }
 
-void vks::ColorMaterial::draw(VkCommandBuffer cmd, VkPipelineLayout layout, VkDescriptorSet& lastSet,
+void vks::ColorMaterial::draw(VkCommandBuffer cmd, VkPipelineLayout layout, VkDescriptorSet lastSet,
     const Model* model, const glm::mat4& transform)
 {
     // 1. Bind Descriptor Set (Optimized)

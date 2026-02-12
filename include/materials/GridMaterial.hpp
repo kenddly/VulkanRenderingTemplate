@@ -99,7 +99,7 @@ namespace vks
             ImGui::DragInt("Thickness", &thickness, 1, 1, 10);
         }
 
-        void draw(VkCommandBuffer cmd, VkPipelineLayout layout, VkDescriptorSet& lastSet,
+        void draw(VkCommandBuffer cmd, VkPipelineLayout layout, VkDescriptorSet lastSet,
                   const vks::Model* model, const glm::mat4& transform) override
         {
             if (m_materialDescriptorSet != lastSet)
