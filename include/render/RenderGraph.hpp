@@ -56,7 +56,7 @@ namespace vks
         SwapChain& getSwapChain() { return swapChain; }
 
     private:
-        void submit(VkCommandBuffer cmd, uint32_t imageIndex);
+        void submit(VkCommandBuffer cmd);
         void present(uint32_t imageIndex, bool& framebufferResized);
         void update(float dt, uint32_t imageIndex);
         

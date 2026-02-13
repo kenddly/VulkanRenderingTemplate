@@ -89,8 +89,8 @@ void ImGuiRenderPass::createRenderPass() {
   attachmentDescription.format = m_swapChain.imageFormat();
   attachmentDescription.samples = VK_SAMPLE_COUNT_1_BIT;
   attachmentDescription.loadOp =
-      VK_ATTACHMENT_LOAD_OP_DONT_CARE; // Need UI to be drawn on top of main
-  attachmentDescription.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+      VK_ATTACHMENT_LOAD_OP_LOAD; // Need UI to be drawn on top of main
+  attachmentDescription.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
   attachmentDescription.finalLayout =
       VK_IMAGE_LAYOUT_PRESENT_SRC_KHR; // Last pass so we want to present after
   attachmentDescription.storeOp = VK_ATTACHMENT_STORE_OP_STORE;

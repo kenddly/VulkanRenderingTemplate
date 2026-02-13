@@ -63,7 +63,7 @@ namespace vks
             throw std::runtime_error("failed to record command buffer!");
         }
         
-        submit(cmd, imageIndex);
+        submit(cmd);
         present(imageIndex, framebufferResized);
         update(Time::getDeltaTime(), imageIndex);
         
@@ -73,7 +73,7 @@ namespace vks
         return framebufferResized;
     }
 
-    void RenderGraph::submit(VkCommandBuffer cmd, uint32_t imageIndex)
+    void RenderGraph::submit(VkCommandBuffer cmd)
     {
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -90,7 +90,7 @@ namespace vks
         submitInfo.pCommandBuffers = &cmd;
 
         // Signal that rendering is finished
-        VkSemaphore signalSemaphores[] = {syncObjects.renderFinished(imageIndex)};
+        VkSemaphore signalSemaphores[] = {syncObjects.renderFinished(currentFrame)};
         submitInfo.signalSemaphoreCount = 1;
         submitInfo.pSignalSemaphores = signalSemaphores;
 
@@ -106,7 +106,7 @@ namespace vks
 
     void RenderGraph::present(uint32_t imageIndex, bool& framebufferResized)
     {
-        VkSemaphore signalSemaphores[] = {syncObjects.renderFinished(imageIndex)};
+        VkSemaphore signalSemaphores[] = {syncObjects.renderFinished(currentFrame)};
             
         VkPresentInfoKHR presentInfo{};
         presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;

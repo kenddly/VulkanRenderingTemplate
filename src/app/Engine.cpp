@@ -122,7 +122,7 @@ namespace vks
 
         registerRenderPass(geometryPass);
         registerRenderPass(imguiPass);
-        registerRenderPass(uiPass);
+        // registerRenderPass(uiPass);
 
         // Create pipelines
 
@@ -196,10 +196,26 @@ namespace vks
             }
         };
 
+        GraphicsPipelineDesc outlinePipelineDesc = spherePipelineDesc;
+        outlinePipelineDesc.vertexShader = "assets/shaders/outline.vert.spv";
+        outlinePipelineDesc.fragmentShader = "assets/shaders/outline.frag.spv";
+        outlinePipelineDesc.cull = VK_CULL_MODE_FRONT_BIT;
+        // Cull front faces to create outline effect
+
+        PipelineDesc outlinePipelineDesc_{spherePipelineDesc_};
+        outlinePipelineDesc_.payload = outlinePipelineDesc;
+        outlinePipelineDesc_.pushConstants = {
+            VkPushConstantRange{
+                .stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+                .offset = 0,
+                .size = 96 // model matrix + outline width + outline color
+            }
+        };
+
         geometryPass->pipelines().createOrReplace("grid", gridPipelineDesc_);
         geometryPass->pipelines().createOrReplace("sphere", spherePipelineDesc_);
         geometryPass->pipelines().createOrReplace("sprite", spritePipelineDesc_);
-
+        geometryPass->pipelines().createOrReplace("outline", outlinePipelineDesc_);
 
         GraphicsPipelineDesc uiPipelineDesc{};
         uiPipelineDesc.renderPass = uiPass->handle();

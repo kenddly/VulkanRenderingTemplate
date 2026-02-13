@@ -26,5 +26,6 @@ namespace vks
 
         FileWatcher m_fileWatcher;
         Ref<ShaderCompiler> m_shaderCompiler;
+        int m_selectedObject = 0;
     };
 } // namespace vks

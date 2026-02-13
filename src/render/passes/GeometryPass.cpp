@@ -133,6 +133,39 @@ void GeometryPass::record(VkCommandBuffer cmdBuffer, uint32_t imageIndex)
         );
     }
 
+    m_selectedObject = 1;
+
+    if (m_selectedObject != 0)
+    {
+        auto entity = (entt::entity)(m_selectedObject - 1);
+        auto& renderable = ce.scene().getComponent<Renderable>(entity);
+        auto& transform = ce.scene().getComponent<Transform>(entity);
+
+        // Draw outline with a special "outline" pipeline
+        VkPipeline outlinePipeline = pipelines().getPipeline("outline");
+        VkPipelineLayout outlineLayout = pipelines().getLayout("outline");
+        vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, outlinePipeline);
+        if (cameraSet != VK_NULL_HANDLE)
+        {
+            vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, outlineLayout, 0, 1, &cameraSet, 0,
+                                    nullptr);
+        }
+
+
+        struct PushData
+        {
+            glm::mat4 model;
+            float outlineWidth = 0.05f;
+            alignas(16) glm::vec4 color = glm::vec4(1.0f, 1.0f, 0.4f, 1.0f);
+        } pushData;
+
+        pushData.model = transform.transform;
+        vkCmdPushConstants(cmdBuffer, outlineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
+                           sizeof(PushData), &pushData);
+
+        renderable.model->bind(cmdBuffer);
+    }
+
     vkCmdEndRenderPass(cmdBuffer);
 }
 
@@ -158,7 +191,7 @@ void GeometryPass::createRenderPass()
     colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
     colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
     colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+    colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
     VkAttachmentReference colorRef = {};
     colorRef.attachment = 0;
