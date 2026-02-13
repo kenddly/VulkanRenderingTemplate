@@ -44,6 +44,7 @@ namespace vks
         Window& window() { return m_window; }
         RenderGraph& renderer() { return m_renderGraph; }
         Scene& scene() { return m_scene; }
+        EngineEditor& editor() { return m_editor; }
         AssetManager& assets() { return m_assets; }
 
         Camera& camera() { return m_camera; }

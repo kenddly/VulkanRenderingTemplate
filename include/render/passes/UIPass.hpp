@@ -3,6 +3,8 @@
 
 namespace vks
 {
+    class Buffer;
+
     class UIPass : public IRenderPass
     {
     public:
@@ -21,10 +23,13 @@ namespace vks
         std::vector<VkImageView> m_imageViews;
         std::vector<VkDeviceMemory> m_imageMemory;
 
+        std::unique_ptr<Buffer> m_pixelBuffer;
 
         void createImages();
         void createImageViews();
         void createRenderPass() override;
         void createFrameBuffers() override;
+
+        void capturePixelID(VkCommandBuffer cmd, VkImage srcImage, glm::vec2 mousePos);
     };
 }

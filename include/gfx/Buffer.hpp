@@ -60,6 +60,7 @@ public:
     VkBuffer getBuffer() const { return m_buffer; }
     VkDeviceMemory getMemory() const { return m_memory; }
     VkDeviceSize getSize() const { return m_bufferSize; }
+    void* getMapped() const { return m_mapped; }
 
 private:
     /**

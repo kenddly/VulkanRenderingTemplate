@@ -9,6 +9,7 @@
 
 namespace vks
 {
+    class Buffer;
     class Instance;
     class Window;
 
@@ -67,6 +68,23 @@ namespace vks
             uint32_t width,
             uint32_t height
         ) const;
+
+        void copyImageToBuffer(
+            VkCommandBuffer cmd,
+            VkImage srcImage,
+            VkImageLayout srcImageLayout,
+            VkBuffer dstBuffer,
+            VkExtent2D imageExtent
+        ) const;
+
+        void copyImageRegionToBuffer(
+            VkCommandBuffer cmd,
+            VkImage srcImage,
+            VkImageLayout srcImageLayout,
+            VkBuffer dstBuffer,
+            VkRect2D region
+        ) const;
+
 
         void generateMipmaps(
             VkImage image,

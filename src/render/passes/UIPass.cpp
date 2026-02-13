@@ -2,9 +2,11 @@
 #include <render/passes/UIPass.hpp>
 
 #include "app/EngineContext.hpp"
+#include "core/Log.hpp"
 #include "editor/UI/components/Renderable.hpp"
 #include "gfx/Device.hpp"
 #include "gfx/SwapChain.hpp"
+#include "platform/Input.hpp"
 
 namespace vks
 {
@@ -15,10 +17,29 @@ namespace vks
         createImageViews();
         UIPass::createRenderPass();
         UIPass::createFrameBuffers();
+
+        m_pixelBuffer = std::make_unique<Buffer>(
+            device,
+            sizeof(uint32_t),
+            VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+        );
+
+        m_pixelBuffer->map();
     }
 
     void UIPass::update(float dt, uint32_t imageIndex)
     {
+        static auto& ce = EngineContext::get();
+        static auto& input = EngineContext::get().window().input();
+
+        if (input.isMousePressed(Input::MouseButton::LEFT))
+        {
+            // Read from the pixel buffer to get the object ID
+            uint32_t* data = (uint32_t*)m_pixelBuffer->getMapped();
+
+            LOG_INFO("Clicked Object ID: {}", *data);
+        }
     }
 
     void UIPass::record(VkCommandBuffer cmd, uint32_t imageIndex)
@@ -89,6 +110,9 @@ namespace vks
         }
 
         vkCmdEndRenderPass(cmd);
+
+        static auto& input = EngineContext::get().window().input();
+        capturePixelID(cmd, m_images[imageIndex], input.mousePos());
     }
 
     void UIPass::onResize()
@@ -237,5 +261,28 @@ namespace vks
                 &m_frameBuffers[i]
             );
         }
+    }
+
+    void UIPass::capturePixelID(VkCommandBuffer cmd, VkImage srcImage, glm::vec2 mousePos)
+    {
+        // Clamp mouse
+        uint32_t width = m_swapChain.extent().width;
+        uint32_t height = m_swapChain.extent().height;
+        int32_t x = std::clamp((int32_t)mousePos.x, 0, (int32_t)width - 1);
+        int32_t y = std::clamp((int32_t)mousePos.y, 0, (int32_t)height - 1);
+
+        // Define the Region (x, y, width, height)
+        VkRect2D pickRegion{};
+        pickRegion.offset = { x, y };
+        pickRegion.extent = { 1, 1 };
+
+        // Call the Region Function
+        m_device.copyImageRegionToBuffer(
+            cmd,
+            srcImage,
+            VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+            m_pixelBuffer->getBuffer(),
+            pickRegion
+        );
     }
 }

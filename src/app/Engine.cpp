@@ -122,7 +122,7 @@ namespace vks
 
         registerRenderPass(geometryPass);
         registerRenderPass(imguiPass);
-        // registerRenderPass(uiPass);
+        registerRenderPass(uiPass);
 
         // Create pipelines
 

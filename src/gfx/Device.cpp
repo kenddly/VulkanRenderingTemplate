@@ -10,6 +10,8 @@
 #include <stdexcept>
 #include <vector>
 
+#include "gfx/Buffer.hpp"
+
 
 using namespace vks;
 
@@ -356,6 +358,110 @@ void vks::Device::copyBufferToImage(
         );
     });
 }
+
+void Device::copyImageToBuffer(VkCommandBuffer cmd, VkImage srcImage, VkImageLayout srcImageLayout, VkBuffer dstBuffer,
+    VkExtent2D imageExtent) const
+{
+    // Define a region that covers the entire image
+    VkRect2D fullRegion{};
+    fullRegion.offset = {0, 0};
+    fullRegion.extent = imageExtent;
+
+    // Delegate to the region function
+    copyImageRegionToBuffer(cmd, srcImage, srcImageLayout, dstBuffer, fullRegion);
+}
+
+void Device::copyImageRegionToBuffer(VkCommandBuffer cmd, VkImage srcImage, VkImageLayout srcImageLayout,
+    VkBuffer dstBuffer, VkRect2D region) const
+{
+        // 1. BARRIER: Prepare Image for Transfer Reading
+    // We determine the source stage based on the current layout
+    VkPipelineStageFlags srcStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+    VkAccessFlags srcAccess = 0;
+
+    if (srcImageLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL) {
+        srcStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        srcAccess = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+    } else if (srcImageLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL) {
+        srcStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+        srcAccess = VK_ACCESS_TRANSFER_WRITE_BIT;
+    } else if (srcImageLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+        srcStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        srcAccess = VK_ACCESS_SHADER_READ_BIT;
+    } else {
+        // Fallback for general cases
+        srcStage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
+        srcAccess = VK_ACCESS_MEMORY_WRITE_BIT;
+    }
+
+    VkImageMemoryBarrier imageBarrier{};
+    imageBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    imageBarrier.srcAccessMask = srcAccess;
+    imageBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+    imageBarrier.oldLayout = srcImageLayout;
+    imageBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL; // Must be this for copy
+    imageBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    imageBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    imageBarrier.image = srcImage;
+    imageBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    imageBarrier.subresourceRange.baseMipLevel = 0;
+    imageBarrier.subresourceRange.levelCount = 1;
+    imageBarrier.subresourceRange.baseArrayLayer = 0;
+    imageBarrier.subresourceRange.layerCount = 1;
+
+    vkCmdPipelineBarrier(
+        cmd,
+        srcStage,
+        VK_PIPELINE_STAGE_TRANSFER_BIT,
+        0, 0, nullptr, 0, nullptr,
+        1, &imageBarrier
+    );
+
+    // 2. COPY: Setup the buffer copy region
+    VkBufferImageCopy copyRegion{};
+    copyRegion.bufferOffset = 0;
+    // Setting these to 0 means "tightly packed" (Unity style)
+    copyRegion.bufferRowLength = 0;
+    copyRegion.bufferImageHeight = 0;
+
+    copyRegion.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    copyRegion.imageSubresource.mipLevel = 0;
+    copyRegion.imageSubresource.baseArrayLayer = 0;
+    copyRegion.imageSubresource.layerCount = 1;
+
+    copyRegion.imageOffset = { region.offset.x, region.offset.y, 0 };
+    copyRegion.imageExtent = { region.extent.width, region.extent.height, 1 };
+
+    vkCmdCopyImageToBuffer(
+        cmd,
+        srcImage,
+        VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+        dstBuffer,
+        1,
+        &copyRegion
+    );
+
+    // 3. BARRIER: Make Buffer Visible to Host (CPU)
+    VkBufferMemoryBarrier bufferBarrier{};
+    bufferBarrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+    bufferBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+    bufferBarrier.dstAccessMask = VK_ACCESS_HOST_READ_BIT;
+    bufferBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    bufferBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    bufferBarrier.buffer = dstBuffer;
+    bufferBarrier.offset = 0;
+    bufferBarrier.size = VK_WHOLE_SIZE;
+
+    vkCmdPipelineBarrier(
+        cmd,
+        VK_PIPELINE_STAGE_TRANSFER_BIT,
+        VK_PIPELINE_STAGE_HOST_BIT,
+        0, 0, nullptr,
+        1, &bufferBarrier,
+        0, nullptr
+    );
+}
+
 
 void Device::generateMipmaps(VkImage image, VkFormat imageFormat, uint32_t width, uint32_t height,
                              uint32_t mipLevels) const
