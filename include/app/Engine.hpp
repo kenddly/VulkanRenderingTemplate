@@ -16,6 +16,8 @@
 #include <gfx/Buffer.hpp>
 #include <editor/UI/EngineEditor.hpp>
 
+#include "core/LayerStack.hpp"
+
 
 namespace vks
 {
@@ -61,6 +63,8 @@ namespace vks
         void registerRenderPass(Ref<IRenderPass> pass);
         Ref<DescriptorSetLayout> getDescriptorSetLayout(const std::string& name) const;
 
+        bool processEvents() const { return m_processEvents; }
+
     private:
         void onInit();
         void drawFrame(bool& framebufferResized);
@@ -91,5 +95,6 @@ namespace vks
 
         // Editor Mode (Enables ImGui and other editor features)
         EngineEditor m_editor;
+        bool m_processEvents = false;
     };
 }

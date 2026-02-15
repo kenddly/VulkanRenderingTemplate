@@ -133,11 +133,10 @@ void GeometryPass::record(VkCommandBuffer cmdBuffer, uint32_t imageIndex)
         );
     }
 
-    m_selectedObject = 1;
+    auto entity = ce.editor().getSelectedEntity();
 
-    if (m_selectedObject != 0)
+    if (entity != entt::null)
     {
-        auto entity = (entt::entity)(m_selectedObject - 1);
         auto& renderable = ce.scene().getComponent<Renderable>(entity);
         auto& transform = ce.scene().getComponent<Transform>(entity);
 

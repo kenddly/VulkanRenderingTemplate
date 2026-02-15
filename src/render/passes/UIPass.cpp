@@ -32,13 +32,12 @@ namespace vks
     {
         static auto& ce = EngineContext::get();
         static auto& input = EngineContext::get().window().input();
-
         if (input.isMousePressed(Input::MouseButton::LEFT))
         {
-            // Read from the pixel buffer to get the object ID
+            /* Read from the pixel buffer to get the object ID */
             uint32_t* data = (uint32_t*)m_pixelBuffer->getMapped();
-
             LOG_INFO("Clicked Object ID: {}", *data);
+            ce.editor().selectEntity((Entity) (*data - 1));
         }
     }
 
@@ -273,8 +272,8 @@ namespace vks
 
         // Define the Region (x, y, width, height)
         VkRect2D pickRegion{};
-        pickRegion.offset = { x, y };
-        pickRegion.extent = { 1, 1 };
+        pickRegion.offset = {x, y};
+        pickRegion.extent = {1, 1};
 
         // Call the Region Function
         m_device.copyImageRegionToBuffer(

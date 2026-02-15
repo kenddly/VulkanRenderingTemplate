@@ -199,7 +199,7 @@ namespace vks
         GraphicsPipelineDesc outlinePipelineDesc = spherePipelineDesc;
         outlinePipelineDesc.vertexShader = "assets/shaders/outline.vert.spv";
         outlinePipelineDesc.fragmentShader = "assets/shaders/outline.frag.spv";
-        outlinePipelineDesc.cull = VK_CULL_MODE_FRONT_BIT;
+        outlinePipelineDesc.cull = VK_CULL_MODE_BACK_BIT;
         // Cull front faces to create outline effect
 
         PipelineDesc outlinePipelineDesc_{spherePipelineDesc_};
@@ -262,8 +262,6 @@ namespace vks
             // App logic
             app.tick();
 
-            // Engine logic
-            m_camera.update(dt);
             updateCameraUBO();
 
             // UI
@@ -277,6 +275,12 @@ namespace vks
             m_editor.onGui();
 
             app.onImGui();
+
+            // Engine logic
+            ImGuiIO& io = ImGui::GetIO();
+            m_processEvents = !(io.WantCaptureMouse || io.WantCaptureKeyboard);
+            if (m_processEvents)
+                m_camera.update(dt);
 
             ImGui::Render();
 

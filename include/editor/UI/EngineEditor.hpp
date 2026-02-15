@@ -4,7 +4,7 @@
 #include <editor/UI/IEditorPanel.hpp>
 #include <editor/UI/EditorResourceManager.hpp>
 
-#include <gfx/Descriptors.hpp>
+#include "scene/Scene.hpp"
 
 namespace vks {
     class Engine;
@@ -15,13 +15,13 @@ namespace vks {
 
         void onInit();
         void onGui() const;
-        void selectEntity(int entityId) { m_selectedEntity = entityId; }
-        void deselectEntity() { m_selectedEntity = -1; }
+        void selectEntity(Entity entityId) { m_selectedEntity = entityId; }
+        void deselectEntity() { m_selectedEntity = entt::null; }
 
-        int getSelectedEntity() { return m_selectedEntity; }
+        Entity getSelectedEntity() { return m_selectedEntity; }
 
     private:
-        int m_selectedEntity = -1;
+        Entity m_selectedEntity = entt::null;
 
         // Helper to register panels easily
         template <typename T> void addPanel();

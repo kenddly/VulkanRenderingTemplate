@@ -3,6 +3,7 @@
 
 #include <imgui.h>
 #include <vector>
+#include <editor/UI/Inspector.hpp>
 #include <editor/UI/AssetBrowserPanel.hpp>
 #include <editor/UI/SceneHierarchyPanel.hpp>
 
@@ -17,6 +18,7 @@ namespace vks
         // Register Panels
         addPanel<SceneHierarchyPanel>();
         addPanel<AssetBrowserPanel>();
+        addPanel<InspectorPanel>();
 
         resourceManager = std::make_shared<EditorResourceManager>(m_engine.device());
     }

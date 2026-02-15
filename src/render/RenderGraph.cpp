@@ -136,9 +136,13 @@ namespace vks
 
     void RenderGraph::update(float dt, uint32_t imageIndex)
     {
-        for (auto& pass : m_passes)
+        static auto& ce = EngineContext::get();
+        if (ce.processEvents())
         {
-            pass->update(dt, imageIndex);
+            for (auto& pass : m_passes)
+            {
+                pass->update(dt, imageIndex);
+            }
         }
     }
 

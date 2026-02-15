@@ -59,6 +59,11 @@ namespace vks
             m_registry.clear();
         }
 
+        bool valid(Entity entity)
+        {
+            return m_registry.valid(entity);
+        }
+
     private:
         entt::registry m_registry;
     };
