@@ -15,8 +15,6 @@ namespace vks
 
         void update(float dt, uint32_t currentImage) override;
         void record(VkCommandBuffer cmd, uint32_t currentImage) override;
-        void onResize() override;
-
         void recreate() override;
 
         RenderPassType type() const override { return RenderPassType::Geometry; }

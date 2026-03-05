@@ -45,7 +45,6 @@ namespace vks
 
         virtual void update(float dt, uint32_t currentImage) = 0;
         virtual void record(VkCommandBuffer cmd, uint32_t currentImage) = 0;
-        virtual void onResize() = 0;
 
         virtual void recreate();
         void cleanupOld();

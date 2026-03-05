@@ -54,7 +54,9 @@ namespace vks
 
         EventManager::subscribe<WindowResizeEvent>([this](WindowResizeEvent e)
         {
-            LOG_INFO("RESIZED THE WINDOW TO SIZES {} {}", e.newWidth, e.newHeight);
+            LOG_INFO("Window resized: {}x{}", e.newWidth, e.newHeight);
+            m_dirtyTargets = true;
+            m_newExtent = {static_cast<uint32_t>(e.newWidth), static_cast<uint32_t>(e.newHeight)};
         });
     }
 
@@ -106,6 +108,19 @@ namespace vks
                                              .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
                                                          VK_SHADER_STAGE_FRAGMENT_BIT)
                                              .build();
+
+        // render target for ui pass
+        auto objectPickingTarget = std::make_shared<RenderTarget>(
+            device(),
+            renderer().getSwapChain()->extent(),
+            renderer().getSwapChain()->numImages(),
+            VK_FORMAT_R32_UINT,
+            VK_FORMAT_D32_SFLOAT,
+            VK_IMAGE_USAGE_TRANSFER_SRC_BIT
+        );
+
+        renderTargets.push_back(objectPickingTarget);
+
         // Create passes
         auto geometryPass = std::make_shared<GeometryPass>(
             device(),
@@ -119,7 +134,7 @@ namespace vks
 
         auto uiPass = std::make_shared<UIPass>(
             device(),
-            renderer().getSwapChain()
+            objectPickingTarget
         );
 
         registerRenderPass(geometryPass);
@@ -261,6 +276,17 @@ namespace vks
 
         m_window.setDrawFrameFunc([this, &app](float dt)
         {
+            if (m_dirtyTargets)
+            {
+                vkDeviceWaitIdle(m_device.logical());
+
+                for (auto& target : renderTargets)
+                    target->resize(m_newExtent);
+
+                renderer().recreateSwapChain();
+
+                m_dirtyTargets = false;
+            }
             // App logic
             app.tick();
 

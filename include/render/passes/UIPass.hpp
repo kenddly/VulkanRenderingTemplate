@@ -12,21 +12,14 @@ namespace vks
 
         void update(float dt, uint32_t imageIndex) override;
         void record(VkCommandBuffer cmd, uint32_t imageIndex) override;
-        void onResize() override;
 
         void recreate() override;
 
         RenderPassType type() const override { return RenderPassType::Editor; }
 
     private:
-        std::vector<VkImage> m_images;
-        std::vector<VkImageView> m_imageViews;
-        std::vector<VkDeviceMemory> m_imageMemory;
-
         std::unique_ptr<Buffer> m_pixelBuffer;
 
-        void createImages();
-        void createImageViews();
         void createRenderPass() override;
         void createFrameBuffers() override;
 

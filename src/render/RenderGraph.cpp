@@ -15,10 +15,6 @@ namespace vks
         commandBuffers(device, swapChain, commandPool),
         syncObjects(device, swapChain->numImages(), MAX_FRAMES_IN_FLIGHT)
     {
-        EventManager::subscribe<WindowResizeEvent>([this](WindowResizeEvent e)
-        {
-            m_dirtySwapChain = true;
-        });
     }
 
     void RenderGraph::execute()
@@ -135,7 +131,6 @@ namespace vks
 
         if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_dirtySwapChain)
         {
-            if (!m_dirtySwapChain) LOG_WARN("SOMETHING IS WRONG");
             recreateSwapChain();
             syncObjects.recreate(swapChain->numImages());
         }
@@ -157,13 +152,13 @@ namespace vks
         }
     }
 
-    void RenderGraph::recreate()
+    void RenderGraph::recreatePasses()
     {
         for (auto& pass : m_passes)
         {
             pass->recreate();
         }
-        // Note: cleanupOld is usually handled inside specific recreate logic or destructors
+        // Note: cleanupOld is usually handled inside specific recreatePasses logic or destructors
     }
 
     void RenderGraph::recreateSwapChain()
@@ -184,10 +179,7 @@ namespace vks
         swapChain->recreate();
         
         // Recreate Passes (Framebuffers, Pipelines)
-        for (auto & pass : m_passes)
-        {
-            pass->recreate();
-        }
+        recreatePasses();
 
         // Cleanup old swapchain resources
         swapChain->cleanupOld();

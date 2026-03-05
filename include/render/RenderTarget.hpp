@@ -19,6 +19,7 @@ namespace vks
             uint32_t imageCount,
             VkFormat colorFormat,
             VkFormat depthFormat,
+            VkImageUsageFlags additionalUsage = 0,
             bool sampled = true
         );
 
@@ -29,6 +30,8 @@ namespace vks
         VkExtent2D extent() const override { return m_extent; }
 
         size_t numImages() const override { return m_imageCount; }
+        VkFormat colorFormat() const override { return m_colorFormat; }
+        VkFormat depthFormat() const override { return m_depthFormat; }
 
         // Per-frame access
         VkImageView colorView(uint32_t index) const override { return m_colorViews[index]; }
@@ -36,9 +39,8 @@ namespace vks
         VkSampler imageSampler() const { return m_sampler; }
 
         VkImage colorImage(uint32_t index) const override { return m_colorImages[index]; }
+        VkImage depthImage(uint32_t index) const override { return m_depthImages[index]; }
 
-        VkFormat colorFormat() const override { return m_colorFormat; }
-        VkFormat depthFormat() const override { return m_depthFormat; }
         VkDescriptorSet renderTargetImage(uint32_t index);
 
         // Viewport descriptor sets
@@ -58,6 +60,7 @@ namespace vks
         VkFormat m_colorFormat{};
         VkFormat m_depthFormat{};
         bool m_sampled{true};
+        VkImageUsageFlags m_additionalUsage;
 
         std::vector<VkImage> m_colorImages;
         std::vector<VkDeviceMemory> m_colorMemory;

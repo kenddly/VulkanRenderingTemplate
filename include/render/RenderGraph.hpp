@@ -6,8 +6,6 @@
 #include <gfx/CommandBuffers.hpp>
 #include <render/passes/IRenderPass.hpp>
 
-#include "platform/events/EventManager.hpp"
-#include "platform/events/Events.hpp"
 
 namespace vks
 {
@@ -44,7 +42,7 @@ namespace vks
         // Execute all passes in order
         void execute();
 
-        void recreate();
+        void recreatePasses();
         void recreateSwapChain();
 
         // Cleanup

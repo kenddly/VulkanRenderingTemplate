@@ -13,8 +13,6 @@ namespace vks
     UIPass::UIPass(const Device& device, const Ref<IRenderTarget>& renderTarget)
         : IRenderPass(device, renderTarget)
     {
-        createImages();
-        createImageViews();
         UIPass::createRenderPass();
         UIPass::createFrameBuffers();
 
@@ -111,93 +109,12 @@ namespace vks
         vkCmdEndRenderPass(cmd);
 
         static auto& input = EngineContext::get().window().input();
-        capturePixelID(cmd, m_images[imageIndex], input.mousePos());
-    }
-
-    void UIPass::onResize()
-    {
+        capturePixelID(cmd, m_renderTarget->colorImage(imageIndex), input.mousePos());
     }
 
     void UIPass::recreate()
     {
-        createImages();
-        createImageViews();
         IRenderPass::recreate();
-    }
-
-    // Create iamges with R32 format for object ID storage
-    void UIPass::createImages()
-    {
-        m_images.resize(m_renderTarget->numImages());
-        m_imageMemory.resize(m_renderTarget->numImages());
-
-        for (size_t i = 0; i < m_images.size(); i++)
-        {
-            VkImageCreateInfo info{VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO};
-            info.imageType = VK_IMAGE_TYPE_2D;
-            info.format = VK_FORMAT_R32_UINT;
-            info.extent.width = m_renderTarget->extent().width;
-            info.extent.height = m_renderTarget->extent().height;
-            info.extent.depth = 1;
-            info.mipLevels = 1;
-            info.arrayLayers = 1;
-            info.samples = VK_SAMPLE_COUNT_1_BIT;
-            info.tiling = VK_IMAGE_TILING_OPTIMAL;
-            info.usage =
-                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
-                VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
-            info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-            info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-
-            vkCreateImage(m_device.logical(), &info, nullptr, &m_images[i]);
-
-            // 🔹 Query memory requirements
-            VkMemoryRequirements memReq;
-            vkGetImageMemoryRequirements(m_device.logical(), m_images[i], &memReq);
-
-            VkMemoryAllocateInfo allocInfo{VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO};
-            allocInfo.allocationSize = memReq.size;
-            allocInfo.memoryTypeIndex =
-                m_device.findMemoryType(
-                    memReq.memoryTypeBits,
-                    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
-                );
-
-            vkAllocateMemory(
-                m_device.logical(),
-                &allocInfo,
-                nullptr,
-                &m_imageMemory[i]
-            );
-
-            // Bind memory
-            vkBindImageMemory(
-                m_device.logical(),
-                m_images[i],
-                m_imageMemory[i],
-                0
-            );
-        }
-    }
-
-    void UIPass::createImageViews()
-    {
-        m_imageViews.resize(m_images.size());
-
-        for (size_t i = 0; i < m_images.size(); i++)
-        {
-            VkImageViewCreateInfo info{VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO};
-            info.image = m_images[i];
-            info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-            info.format = VK_FORMAT_R32_UINT;
-            info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-            info.subresourceRange.baseMipLevel = 0;
-            info.subresourceRange.levelCount = 1;
-            info.subresourceRange.baseArrayLayer = 0;
-            info.subresourceRange.layerCount = 1;
-
-            vkCreateImageView(m_device.logical(), &info, nullptr, &m_imageViews[i]);
-        }
     }
 
     void UIPass::createRenderPass()
@@ -242,7 +159,7 @@ namespace vks
 
         for (uint32_t i = 0; i < m_frameBuffers.size(); i++)
         {
-            VkImageView attachments[] = {m_imageViews[i]};
+            VkImageView attachments[] = {m_renderTarget->colorView(i)};
 
             VkFramebufferCreateInfo fb{};
             fb.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;

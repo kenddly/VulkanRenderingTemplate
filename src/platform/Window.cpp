@@ -1,11 +1,10 @@
-#include <../include/platform/Window.hpp>
-
-#include <../include/gfx/Instance.hpp>
+#include <platform/Window.hpp>
+#include <platform/events/EventManager.hpp>
+#include <platform/events/Events.hpp>
 
 #include <iostream>
+#include <gfx/Instance.hpp>
 
-#include "platform/events/EventManager.hpp"
-#include "platform/events/Events.hpp"
 
 using namespace vks;
 

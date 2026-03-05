@@ -11,7 +11,6 @@ namespace vks
         ImGuiRenderPass(const Device& device, const Ref<IRenderTarget>& renderTarget);
         void update(float dt, uint32_t currentImage) override;
         void record(VkCommandBuffer cmd, uint32_t currentImage) override;
-        void onResize() override;
 
         RenderPassType type() const override { return RenderPassType::ImGui; }
     private:

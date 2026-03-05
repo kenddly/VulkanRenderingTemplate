@@ -91,8 +91,12 @@ namespace vks
         Ref<Buffer> m_cameraUboBuffer;
         VkDescriptorSet m_cameraDescriptorSet = VK_NULL_HANDLE;
 
+        std::vector<Ref<RenderTarget>> renderTargets;
+
         // Editor Mode (Enables ImGui and other editor features)
         EngineEditor m_editor;
         bool m_processEvents = false;
+        bool m_dirtyTargets = false;
+        VkExtent2D m_newExtent = {0, 0};
     };
 }

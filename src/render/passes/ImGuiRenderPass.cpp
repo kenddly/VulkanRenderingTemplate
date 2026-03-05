@@ -77,12 +77,6 @@ void ImGuiRenderPass::record(VkCommandBuffer cmd, uint32_t currentImage)
     vkCmdEndRenderPass(cmd);
 }
 
-void ImGuiRenderPass::onResize()
-{
-    recreate();
-    cleanupOld();
-}
-
 void ImGuiRenderPass::createRenderPass() {
   // Create an attachment description for the render pass
   VkAttachmentDescription attachmentDescription = {};

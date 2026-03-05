@@ -21,7 +21,7 @@ GeometryPass::GeometryPass(const Device& device, const Ref<IRenderTarget>& rende
     m_shaderCompiler = std::make_shared<ShaderCompiler>([&](const std::filesystem::path& path)
     {
         auto& ec = EngineContext::get();
-        ec.renderer().recreate();
+        ec.renderer().recreatePasses();
     });
 
     FileWatcher::Callback callback = [&](const std::filesystem::path& path)
@@ -165,12 +165,6 @@ void GeometryPass::record(VkCommandBuffer cmdBuffer, uint32_t imageIndex)
     }
 
     vkCmdEndRenderPass(cmdBuffer);
-}
-
-void GeometryPass::onResize()
-{
-    recreate();
-    cleanupOld();
 }
 
 void GeometryPass::recreate()

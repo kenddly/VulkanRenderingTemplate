@@ -13,6 +13,7 @@ namespace vks
         uint32_t imageCount,
         VkFormat colorFormat,
         VkFormat depthFormat,
+        VkImageUsageFlags additionalUsage,
         bool sampled
     )
         : m_device(device),
@@ -20,7 +21,8 @@ namespace vks
           m_imageCount(imageCount),
           m_colorFormat(colorFormat),
           m_depthFormat(depthFormat),
-          m_sampled(sampled)
+          m_sampled(sampled),
+          m_additionalUsage(additionalUsage)
     {
         if (extent.width == 0 || extent.height == 0)
             return;
@@ -89,7 +91,7 @@ namespace vks
         m_depthMemory.resize(m_imageCount);
 
         VkImageUsageFlags colorUsage =
-            VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT |
+            VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | m_additionalUsage |
             (m_sampled ? VK_IMAGE_USAGE_SAMPLED_BIT : 0);
 
         for (uint32_t i = 0; i < m_imageCount; i++)
