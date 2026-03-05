@@ -16,8 +16,6 @@
 #include <gfx/Buffer.hpp>
 #include <editor/UI/EngineEditor.hpp>
 
-#include "core/LayerStack.hpp"
-
 
 namespace vks
 {

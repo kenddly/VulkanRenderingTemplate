@@ -86,7 +86,7 @@ void ImGuiRenderPass::onResize()
 void ImGuiRenderPass::createRenderPass() {
   // Create an attachment description for the render pass
   VkAttachmentDescription attachmentDescription = {};
-  attachmentDescription.format = m_swapChain.imageFormat();
+  attachmentDescription.format = m_swapChain.colorFormat();
   attachmentDescription.samples = VK_SAMPLE_COUNT_1_BIT;
   attachmentDescription.loadOp =
       VK_ATTACHMENT_LOAD_OP_LOAD; // Need UI to be drawn on top of main
@@ -147,7 +147,7 @@ void ImGuiRenderPass::createFrameBuffers()
     for (size_t i = 0; i < numImages; i++)
     {
         VkImageView attachments[] = {
-            m_swapChain.imageView(i)
+            m_swapChain.colorView(i)
         };
 
         VkFramebufferCreateInfo framebufferInfo = {};

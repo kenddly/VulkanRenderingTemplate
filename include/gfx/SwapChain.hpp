@@ -6,6 +6,8 @@
 #include <core/NonCopyable.hpp>
 #include <vector>
 
+#include "render/RenderTarget.hpp"
+
 namespace vks {
 class Device;
 class Window;
@@ -16,30 +18,42 @@ struct SwapChainSupportDetails {
   std::vector<VkPresentModeKHR> presentModes;
 };
 
-class SwapChain : public NonCopyable {
+class SwapChain : public NonCopyable, IRenderTarget {
 public:
   explicit SwapChain(const Device &device, const Window &window);
-  ~SwapChain();
+  ~SwapChain() override;
 
   auto recreate() -> void;
   auto cleanupOld() -> void;
 
-  inline const VkSwapchainKHR &handle() const { return m_swapChain; }
-  inline const VkFormat &imageFormat() const { return m_imageFormat; }
-  inline const VkFormat &depthFormat() const { return m_depthFormat; }
-  inline const VkExtent2D &extent() const { return m_extent; }
-  inline size_t numImages() const { return m_images.size(); }
-  inline size_t numImageViews() const { return m_imageViews.size(); }
+  const VkSwapchainKHR &handle() const { return m_swapChain; }
+  VkFormat colorFormat() const override { return m_imageFormat; }
+  VkFormat depthFormat() const override { return m_depthFormat; }
+  VkExtent2D extent() const override { return m_extent; }
+  size_t numImages() const override { return m_images.size(); }
+  size_t numImageViews() const { return m_imageViews.size(); }
 
-  inline const SwapChainSupportDetails &supportDetails() const {
+  const SwapChainSupportDetails &supportDetails() const {
     return m_supportDetails;
   }
-  inline VkImageView imageView(uint32_t index) const {
+  VkImageView colorView(uint32_t index) const override
+  {
     return m_imageViews[index];
   }
 
-  inline VkImageView depthView(uint32_t index) const {
+  VkImageView depthView(uint32_t index) const override
+  {
     return m_depthViews[index];
+  }
+
+  VkImage colorImage(uint32_t index) const override
+  {
+    return m_images[index];
+  }
+
+   inline VkImage depthImage(uint32_t index) const override
+  {
+    return m_depthImages[index];
   }
 
   static SwapChainSupportDetails
