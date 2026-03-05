@@ -4,6 +4,9 @@
 
 #include <platform/Input.hpp>
 
+#include <platform/events/EventManager.hpp>
+#include <platform/events/Events.hpp>
+
 namespace vks {
 
 // UBO for camera (matches sphere_mesh.vert, Set 0)
@@ -17,7 +20,13 @@ struct CameraUBO
 
 class Camera {
 public:
-    Camera() = default;
+    Camera()
+    {
+        EventManager::subscribe<WindowResizeEvent>([this](WindowResizeEvent e)
+        {
+            setAspect(float(e.newWidth) / float(e.newHeight));
+        });
+    }
 
     void init(Input* input, float aspectRatio)
     {

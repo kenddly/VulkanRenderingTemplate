@@ -65,7 +65,7 @@ namespace vks
 
     private:
         void onInit();
-        void drawFrame(bool& framebufferResized);
+        void drawFrame();
         void updateCameraUBO();
 
         void onImGui();

@@ -8,10 +8,14 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 
-#include "../../include/app/EngineContext.hpp"
-#include "../../include/render/passes/ImGuiRenderPass.hpp"
-#include "../../include/render/passes/GeometryPass.hpp"
-#include "render/passes/UIPass.hpp"
+#include <app/EngineContext.hpp>
+#include <render/passes/ImGuiRenderPass.hpp>
+#include <render/passes/GeometryPass.hpp>
+#include <render/passes/UIPass.hpp>
+
+#include "core/Log.hpp"
+#include "platform/events/EventManager.hpp"
+#include "platform/events/Events.hpp"
 
 namespace vks
 {
@@ -47,6 +51,11 @@ namespace vks
             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
         );
         m_cameraUboBuffer->map();
+
+        EventManager::subscribe<WindowResizeEvent>([this](WindowResizeEvent e)
+        {
+            LOG_INFO("RESIZED THE WINDOW TO SIZES {} {}", e.newWidth, e.newHeight);
+        });
     }
 
     Engine::~Engine()
@@ -75,16 +84,9 @@ namespace vks
         m_cameraUboBuffer->writeToBuffer(&ubo, sizeof(ubo));
     }
 
-    void Engine::drawFrame(bool& framebufferResized)
+    void Engine::drawFrame()
     {
-        if (framebufferResized)
-        {
-            glm::ivec2 size{};
-            m_window.framebufferSize(size);
-            m_camera.setAspect(float(size.x) / float(size.y));
-        }
-
-        m_renderGraph.execute(framebufferResized);
+        m_renderGraph.execute();
     }
 
     void Engine::onInit()
@@ -257,7 +259,7 @@ namespace vks
         // Let app setup engine
         app.onInit(*this);
 
-        m_window.setDrawFrameFunc([this, &app](bool& resized, float dt)
+        m_window.setDrawFrameFunc([this, &app](float dt)
         {
             // App logic
             app.tick();
@@ -285,7 +287,7 @@ namespace vks
             ImGui::Render();
 
             // Render
-            drawFrame(resized);
+            drawFrame();
         });
 
         m_window.mainLoop();

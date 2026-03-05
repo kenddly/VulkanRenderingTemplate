@@ -6,9 +6,22 @@
 #include <app/EngineContext.hpp>
 #include <render/RenderGraph.hpp>
 
+#include "core/Log.hpp"
+
 namespace vks
 {
-    bool RenderGraph::execute(bool& framebufferResized)
+    RenderGraph::RenderGraph(const Device& device, const Ref<SwapChain>& swapChain, const CommandPool& commandPool): device(device),
+        swapChain(swapChain),
+        commandBuffers(device, swapChain, commandPool),
+        syncObjects(device, swapChain->numImages(), MAX_FRAMES_IN_FLIGHT)
+    {
+        EventManager::subscribe<WindowResizeEvent>([this](WindowResizeEvent e)
+        {
+            m_dirtySwapChain = true;
+        });
+    }
+
+    void RenderGraph::execute()
     {
         // Wait for the previous frame to finish using the 'currentFrame' slot
         vkWaitForFences(device.logical(), 1, &syncObjects.inFlightFence(currentFrame),
@@ -22,8 +35,8 @@ namespace vks
         
         if (result == VK_ERROR_OUT_OF_DATE_KHR)
         {
-            recreateSwapChain(framebufferResized);
-            return framebufferResized;
+            recreateSwapChain();
+            return;
         }
         else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
         {
@@ -64,13 +77,11 @@ namespace vks
         }
         
         submit(cmd);
-        present(imageIndex, framebufferResized);
+        present(imageIndex);
         update(Time::getDeltaTime(), imageIndex);
         
         // 6. Advance Frame
         currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
-
-        return framebufferResized;
     }
 
     void RenderGraph::submit(VkCommandBuffer cmd)
@@ -104,7 +115,7 @@ namespace vks
         }
     }
 
-    void RenderGraph::present(uint32_t imageIndex, bool& framebufferResized)
+    void RenderGraph::present(uint32_t imageIndex)
     {
         VkSemaphore signalSemaphores[] = {syncObjects.renderFinished(currentFrame)};
             
@@ -122,11 +133,11 @@ namespace vks
 
         VkResult result = vkQueuePresentKHR(device.presentQueue(), &presentInfo);
 
-        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebufferResized)
+        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_dirtySwapChain)
         {
-            recreateSwapChain(framebufferResized);
+            if (!m_dirtySwapChain) LOG_WARN("SOMETHING IS WRONG");
+            recreateSwapChain();
             syncObjects.recreate(swapChain->numImages());
-            framebufferResized = false;
         }
         else if (result != VK_SUCCESS)
         {
@@ -155,10 +166,8 @@ namespace vks
         // Note: cleanupOld is usually handled inside specific recreate logic or destructors
     }
 
-    void RenderGraph::recreateSwapChain(bool& framebufferResized) const
+    void RenderGraph::recreateSwapChain()
     {
-        framebufferResized = true;
-
         glm::ivec2 size;
         auto& ce = EngineContext::get();
         auto& window = ce.window();
@@ -171,16 +180,19 @@ namespace vks
 
         vkDeviceWaitIdle(device.logical());
 
-        // 1. Recreate Swapchain
+        // Recreate Swapchain
         swapChain->recreate();
         
-        // 2. Recreate Passes (Framebuffers, Pipelines)
+        // Recreate Passes (Framebuffers, Pipelines)
         for (auto & pass : m_passes)
         {
             pass->recreate();
         }
 
-        // 3. Cleanup old swapchain resources
+        // Cleanup old swapchain resources
         swapChain->cleanupOld();
+
+        // Mark swapchain as clean
+        m_dirtySwapChain = false;
     }
 } // namespace vks

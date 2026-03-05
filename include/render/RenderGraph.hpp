@@ -6,6 +6,9 @@
 #include <gfx/CommandBuffers.hpp>
 #include <render/passes/IRenderPass.hpp>
 
+#include "platform/events/EventManager.hpp"
+#include "platform/events/Events.hpp"
+
 namespace vks
 {
     constexpr int MAX_FRAMES_IN_FLIGHT = 2;
@@ -15,12 +18,7 @@ namespace vks
     public:
         RenderGraph(const Device& device,
                     const Ref<SwapChain>& swapChain,
-                    const CommandPool& commandPool)
-            : device(device),
-              swapChain(swapChain),
-              commandBuffers(device, swapChain, commandPool),
-              syncObjects(device, swapChain->numImages(), MAX_FRAMES_IN_FLIGHT)
-        {}
+                    const CommandPool& commandPool);
 
         ~RenderGraph()
         {
@@ -44,10 +42,10 @@ namespace vks
         }
 
         // Execute all passes in order
-        bool execute(bool& framebufferResized);
+        void execute();
 
         void recreate();
-        void recreateSwapChain(bool& framebufferResized) const;
+        void recreateSwapChain();
 
         // Cleanup
         void clear() { m_passes.clear(); }
@@ -56,10 +54,11 @@ namespace vks
 
     private:
         void submit(VkCommandBuffer cmd);
-        void present(uint32_t imageIndex, bool& framebufferResized);
+        void present(uint32_t imageIndex);
         void update(float dt, uint32_t imageIndex);
         
         uint32_t currentFrame = 0;
+        bool m_dirtySwapChain = false;
 
         const Device& device;
         const Ref<SwapChain> swapChain;

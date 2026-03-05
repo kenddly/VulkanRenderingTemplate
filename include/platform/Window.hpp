@@ -19,7 +19,7 @@ class Instance;
 
 class Window : public NonCopyable {
 public:
-  // using DrawFrameFunc = void(*)(bool& framebufferResized);
+  using DrawFrameFunc = std::function<void(float deltaTime)>;
 
   Window(const glm::ivec2 &dimensions, const std::string &title,
          const vks::Instance &instance);
@@ -38,7 +38,7 @@ public:
     glfwGetFramebufferSize(m_window, &size[0], &size[1]);
   }
 
-  inline void setDrawFrameFunc(const std::function<void(bool &, float deltaTime)> &func) {
+  inline void setDrawFrameFunc(const DrawFrameFunc &func) {
     m_drawFrameFunc = func;
   }
 
@@ -57,8 +57,7 @@ private:
   const vks::Instance &m_instance;
   VkSurfaceKHR m_surface;
 
-  bool m_framebufferResized;
-  std::function<void(bool &, float deltaTime)> m_drawFrameFunc;
+  DrawFrameFunc m_drawFrameFunc;
 
   static Window* GetInstance();
   static void FramebufferResizeCallback(GLFWwindow *window, int width,

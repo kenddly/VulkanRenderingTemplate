@@ -4,13 +4,16 @@
 
 #include <iostream>
 
+#include "platform/events/EventManager.hpp"
+#include "platform/events/Events.hpp"
+
 using namespace vks;
 
 Window::Window(const glm::ivec2& dimensions, const std::string& title,
     const Instance& instance)
     : m_dimensions(dimensions), m_title(title), m_instance(instance),
-    m_surface(VK_NULL_HANDLE), m_framebufferResized(true),
-    m_drawFrameFunc([](bool&, float) {}) {
+    m_surface(VK_NULL_HANDLE),
+    m_drawFrameFunc([](float) {}) {
 
     m_windowInstance = this;
     
@@ -49,7 +52,7 @@ void Window::mainLoop() {
         float deltaTime = currentTime - lastTime;
         lastTime = currentTime;
 
-        m_drawFrameFunc(m_framebufferResized, deltaTime);
+        m_drawFrameFunc(deltaTime);
         m_input.update();
     }
 }
@@ -75,5 +78,6 @@ void Window::FramebufferResizeCallback(GLFWwindow* window, int width, int height
     void* ptr = glfwGetWindowUserPointer(window);
     if (!ptr) return; // user pointer cleared or not set yet
 
-    Window::GetInstance()->m_framebufferResized = true;
+    WindowResizeEvent event{width, height};
+    EventManager::emit(event);
 }
