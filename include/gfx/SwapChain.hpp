@@ -8,95 +8,100 @@
 
 #include "render/RenderTarget.hpp"
 
-namespace vks {
-class Device;
-class Window;
+namespace vks
+{
+    class Device;
+    class Window;
 
-struct SwapChainSupportDetails {
-  VkSurfaceCapabilitiesKHR capabilities;
-  std::vector<VkSurfaceFormatKHR> formats;
-  std::vector<VkPresentModeKHR> presentModes;
-};
+    struct SwapChainSupportDetails
+    {
+        VkSurfaceCapabilitiesKHR capabilities;
+        std::vector<VkSurfaceFormatKHR> formats;
+        std::vector<VkPresentModeKHR> presentModes;
+    };
 
-class SwapChain : public NonCopyable, IRenderTarget {
-public:
-  explicit SwapChain(const Device &device, const Window &window);
-  ~SwapChain() override;
+    class SwapChain : public IRenderTarget, NonCopyable
+    {
+    public:
+        explicit SwapChain(const Device& device, const Window& window);
+        ~SwapChain() override;
 
-  auto recreate() -> void;
-  auto cleanupOld() -> void;
+        auto recreate() -> void;
+        auto cleanupOld() -> void;
 
-  const VkSwapchainKHR &handle() const { return m_swapChain; }
-  VkFormat colorFormat() const override { return m_imageFormat; }
-  VkFormat depthFormat() const override { return m_depthFormat; }
-  VkExtent2D extent() const override { return m_extent; }
-  size_t numImages() const override { return m_images.size(); }
-  size_t numImageViews() const { return m_imageViews.size(); }
+        const VkSwapchainKHR& handle() const { return m_swapChain; }
+        VkFormat colorFormat() const override { return m_imageFormat; }
+        VkFormat depthFormat() const override { return m_depthFormat; }
+        VkExtent2D extent() const override { return m_extent; }
+        size_t numImages() const override { return m_images.size(); }
+        size_t numImageViews() const { return m_imageViews.size(); }
 
-  const SwapChainSupportDetails &supportDetails() const {
-    return m_supportDetails;
-  }
-  VkImageView colorView(uint32_t index) const override
-  {
-    return m_imageViews[index];
-  }
+        const SwapChainSupportDetails& supportDetails() const
+        {
+            return m_supportDetails;
+        }
 
-  VkImageView depthView(uint32_t index) const override
-  {
-    return m_depthViews[index];
-  }
+        VkImageView colorView(uint32_t index) const override
+        {
+            return m_imageViews[index];
+        }
 
-  VkImage colorImage(uint32_t index) const override
-  {
-    return m_images[index];
-  }
+        VkImageView depthView(uint32_t index) const override
+        {
+            return m_depthViews[index];
+        }
 
-   inline VkImage depthImage(uint32_t index) const override
-  {
-    return m_depthImages[index];
-  }
+        VkImage colorImage(uint32_t index) const override
+        {
+            return m_images[index];
+        }
 
-  static SwapChainSupportDetails
-  QuerySwapChainSupport(const VkPhysicalDevice &device,
-                        const VkSurfaceKHR &surface);
-  static VkExtent2D
-  ChooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities,
-                   const Window &window);
+        inline VkImage depthImage(uint32_t index) const override
+        {
+            return m_depthImages[index];
+        }
 
-private:
-  const Device &m_device;
-  const Window &m_window;
+        static SwapChainSupportDetails
+        QuerySwapChainSupport(const VkPhysicalDevice& device,
+                              const VkSurfaceKHR& surface);
+        static VkExtent2D
+        ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities,
+                         const Window& window);
 
-  SwapChainSupportDetails m_supportDetails;
-  VkSwapchainKHR m_swapChain;
-  VkSwapchainKHR m_oldSwapChain;
+    private:
+        const Device& m_device;
+        const Window& m_window;
 
-  // Swap chain image and depth handles
-  std::vector<VkImage> m_images;
-  std::vector<VkImageView> m_imageViews;
+        SwapChainSupportDetails m_supportDetails;
+        VkSwapchainKHR m_swapChain;
+        VkSwapchainKHR m_oldSwapChain;
 
-  std::vector<VkImage> m_depthImages;
-  std::vector<VkImageView> m_depthViews;
-  std::vector<VkDeviceMemory> m_depthImageMemories;
+        // Swap chain image and depth handles
+        std::vector<VkImage> m_images;
+        std::vector<VkImageView> m_imageViews;
 
-  VkFormat m_imageFormat;
-  VkFormat m_depthFormat;
+        std::vector<VkImage> m_depthImages;
+        std::vector<VkImageView> m_depthViews;
+        std::vector<VkDeviceMemory> m_depthImageMemories;
 
-  VkExtent2D m_extent;
+        VkFormat m_imageFormat;
+        VkFormat m_depthFormat;
 
-  void createSwapChain();
-  void createImageViews();
-  void createDepthViews();
+        VkExtent2D m_extent;
 
-  void destroyImages();
-  void destroyDepthViews();
+        void createSwapChain();
+        void createImageViews();
+        void createDepthViews();
 
-  static VkSurfaceFormatKHR ChooseSwapSurfaceFormat(
-      const std::vector<VkSurfaceFormatKHR> &availableFormats);
-  static VkFormat ChooseSwapDepthFormat(VkPhysicalDevice device);
-  static VkPresentModeKHR ChooseSwapPresentMode(
-      const std::vector<VkPresentModeKHR> &availablePresentModes);
-};
+        void destroyImages();
+        void destroyDepthViews();
+
+        static VkSurfaceFormatKHR ChooseSwapSurfaceFormat(
+            const std::vector<VkSurfaceFormatKHR>& availableFormats);
+        static VkFormat ChooseSwapDepthFormat(VkPhysicalDevice device);
+        static VkPresentModeKHR ChooseSwapPresentMode(
+            const std::vector<VkPresentModeKHR>& availablePresentModes);
+    };
 } // namespace vks
 
 #endif // SWAPCHAIN_HPP

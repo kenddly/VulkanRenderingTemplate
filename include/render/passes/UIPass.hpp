@@ -8,7 +8,7 @@ namespace vks
     class UIPass : public IRenderPass
     {
     public:
-        UIPass(const Device& device, const SwapChain& swapChain);
+        UIPass(const Device& device, const Ref<IRenderTarget>& renderTarget);
 
         void update(float dt, uint32_t imageIndex) override;
         void record(VkCommandBuffer cmd, uint32_t imageIndex) override;

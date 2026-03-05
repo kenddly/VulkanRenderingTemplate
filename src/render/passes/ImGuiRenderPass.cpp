@@ -11,8 +11,8 @@
 using namespace vks;
 
 ImGuiRenderPass::ImGuiRenderPass(const Device &device,
-                                 const SwapChain &swapChain)
-    : vks::IRenderPass(device, swapChain) {
+                                 const Ref<IRenderTarget>& renderTarget)
+    : vks::IRenderPass(device, renderTarget) {
     createRenderPass();
     createFrameBuffers();
     
@@ -43,8 +43,8 @@ ImGuiRenderPass::ImGuiRenderPass(const Device &device,
     init_info.QueueFamily = indices.graphicsFamily.value();
     init_info.Queue = m_device.graphicsQueue();
     init_info.DescriptorPool = ec.globalDescriptorPool()->getDescriptorPool();
-    init_info.MinImageCount = swapChain.numImages();
-    init_info.ImageCount = swapChain.numImages();
+    init_info.MinImageCount = renderTarget->numImages();
+    init_info.ImageCount = renderTarget->numImages();
     init_info.PipelineInfoMain.RenderPass = handle();
     init_info.PipelineInfoMain.Subpass = 0;
     init_info.PipelineInfoMain.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
@@ -62,8 +62,8 @@ void ImGuiRenderPass::record(VkCommandBuffer cmd, uint32_t currentImage)
     renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     renderPassBeginInfo.renderPass = handle();
     renderPassBeginInfo.framebuffer = frameBuffer(currentImage);
-    renderPassBeginInfo.renderArea.extent.width = m_swapChain.extent().width;
-    renderPassBeginInfo.renderArea.extent.height = m_swapChain.extent().height;
+    renderPassBeginInfo.renderArea.extent.width = m_renderTarget->extent().width;
+    renderPassBeginInfo.renderArea.extent.height = m_renderTarget->extent().height;
     renderPassBeginInfo.clearValueCount = 1;
     renderPassBeginInfo.pClearValues = &clearColor;
 
@@ -86,7 +86,7 @@ void ImGuiRenderPass::onResize()
 void ImGuiRenderPass::createRenderPass() {
   // Create an attachment description for the render pass
   VkAttachmentDescription attachmentDescription = {};
-  attachmentDescription.format = m_swapChain.colorFormat();
+  attachmentDescription.format = m_renderTarget->colorFormat();
   attachmentDescription.samples = VK_SAMPLE_COUNT_1_BIT;
   attachmentDescription.loadOp =
       VK_ATTACHMENT_LOAD_OP_LOAD; // Need UI to be drawn on top of main
@@ -141,13 +141,13 @@ void ImGuiRenderPass::createRenderPass() {
 
 void ImGuiRenderPass::createFrameBuffers()
 {
-    size_t numImages = m_swapChain.numImages();
+    size_t numImages = m_renderTarget->numImages();
     m_frameBuffers.resize(numImages);
 
     for (size_t i = 0; i < numImages; i++)
     {
         VkImageView attachments[] = {
-            m_swapChain.colorView(i)
+            m_renderTarget->colorView(i)
         };
 
         VkFramebufferCreateInfo framebufferInfo = {};
@@ -155,8 +155,8 @@ void ImGuiRenderPass::createFrameBuffers()
         framebufferInfo.renderPass = m_renderPass;
         framebufferInfo.attachmentCount = 1;
         framebufferInfo.pAttachments = attachments;
-        framebufferInfo.width = m_swapChain.extent().width;
-        framebufferInfo.height = m_swapChain.extent().height;
+        framebufferInfo.width = m_renderTarget->extent().width;
+        framebufferInfo.height = m_renderTarget->extent().height;
         framebufferInfo.layers = 1;
 
         if (vkCreateFramebuffer(m_device.logical(), &framebufferInfo, nullptr,

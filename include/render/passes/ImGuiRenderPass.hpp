@@ -8,7 +8,7 @@ namespace vks
     class ImGuiRenderPass : public IRenderPass
     {
     public:
-        ImGuiRenderPass(const Device& device, const SwapChain& swapChain);
+        ImGuiRenderPass(const Device& device, const Ref<IRenderTarget>& renderTarget);
         void update(float dt, uint32_t currentImage) override;
         void record(VkCommandBuffer cmd, uint32_t currentImage) override;
         void onResize() override;

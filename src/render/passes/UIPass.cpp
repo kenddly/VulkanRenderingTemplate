@@ -10,8 +10,8 @@
 
 namespace vks
 {
-    UIPass::UIPass(const Device& device, const SwapChain& swapChain)
-        : IRenderPass(device, swapChain)
+    UIPass::UIPass(const Device& device, const Ref<IRenderTarget>& renderTarget)
+        : IRenderPass(device, renderTarget)
     {
         createImages();
         createImageViews();
@@ -47,7 +47,7 @@ namespace vks
         info.renderPass = handle();
         info.framebuffer = frameBuffer(imageIndex);
         info.renderArea.offset = {0, 0};
-        info.renderArea.extent = m_swapChain.extent();
+        info.renderArea.extent = m_renderTarget->extent();
 
         std::array<VkClearValue, 2> clears{};
         clears[0].color = {{0, 0, 0, 0}};
@@ -59,13 +59,13 @@ namespace vks
         vkCmdBeginRenderPass(cmd, &info, VK_SUBPASS_CONTENTS_INLINE);
 
         VkViewport viewport{};
-        viewport.width = (float)m_swapChain.extent().width;
-        viewport.height = (float)m_swapChain.extent().height;
+        viewport.width = (float)m_renderTarget->extent().width;
+        viewport.height = (float)m_renderTarget->extent().height;
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
         vkCmdSetViewport(cmd, 0, 1, &viewport);
 
-        VkRect2D scissor{{0, 0}, m_swapChain.extent()};
+        VkRect2D scissor{{0, 0}, m_renderTarget->extent()};
         vkCmdSetScissor(cmd, 0, 1, &scissor);
 
         auto& ce = EngineContext::get();
@@ -128,16 +128,16 @@ namespace vks
     // Create iamges with R32 format for object ID storage
     void UIPass::createImages()
     {
-        m_images.resize(m_swapChain.numImages());
-        m_imageMemory.resize(m_swapChain.numImages());
+        m_images.resize(m_renderTarget->numImages());
+        m_imageMemory.resize(m_renderTarget->numImages());
 
         for (size_t i = 0; i < m_images.size(); i++)
         {
             VkImageCreateInfo info{VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO};
             info.imageType = VK_IMAGE_TYPE_2D;
             info.format = VK_FORMAT_R32_UINT;
-            info.extent.width = m_swapChain.extent().width;
-            info.extent.height = m_swapChain.extent().height;
+            info.extent.width = m_renderTarget->extent().width;
+            info.extent.height = m_renderTarget->extent().height;
             info.extent.depth = 1;
             info.mipLevels = 1;
             info.arrayLayers = 1;
@@ -238,7 +238,7 @@ namespace vks
 
     void UIPass::createFrameBuffers()
     {
-        m_frameBuffers.resize(m_swapChain.numImages());
+        m_frameBuffers.resize(m_renderTarget->numImages());
 
         for (uint32_t i = 0; i < m_frameBuffers.size(); i++)
         {
@@ -249,8 +249,8 @@ namespace vks
             fb.renderPass = m_renderPass;
             fb.attachmentCount = 1;
             fb.pAttachments = attachments;
-            fb.width = m_swapChain.extent().width;
-            fb.height = m_swapChain.extent().height;
+            fb.width = m_renderTarget->extent().width;
+            fb.height = m_renderTarget->extent().height;
             fb.layers = 1;
 
             vkCreateFramebuffer(
@@ -265,8 +265,8 @@ namespace vks
     void UIPass::capturePixelID(VkCommandBuffer cmd, VkImage srcImage, glm::vec2 mousePos)
     {
         // Clamp mouse
-        uint32_t width = m_swapChain.extent().width;
-        uint32_t height = m_swapChain.extent().height;
+        uint32_t width = m_renderTarget->extent().width;
+        uint32_t height = m_renderTarget->extent().height;
         int32_t x = std::clamp((int32_t)mousePos.x, 0, (int32_t)width - 1);
         int32_t y = std::clamp((int32_t)mousePos.y, 0, (int32_t)height - 1);
 

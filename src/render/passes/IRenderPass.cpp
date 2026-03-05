@@ -1,14 +1,12 @@
-#include <array>
-#include <iostream>
-#include <../include/gfx/Device.hpp>
-#include <../include/render/passes/IRenderPass.hpp>
-#include <../include/gfx/SwapChain.hpp>
+#include <gfx/Device.hpp>
+#include <gfx/SwapChain.hpp>
+#include <render/passes/IRenderPass.hpp>
 
 using namespace vks;
 
-IRenderPass::IRenderPass(const Device& device, const SwapChain& swapChain)
+IRenderPass::IRenderPass(const Device& device, const Ref<IRenderTarget>& renderTarget)
     : m_renderPass(VK_NULL_HANDLE), m_oldRenderPass(VK_NULL_HANDLE),
-      m_device(device), m_swapChain(swapChain), m_pipelineManager(device)
+      m_device(device), m_renderTarget(renderTarget), m_pipelineManager(device)
 {
 }
 

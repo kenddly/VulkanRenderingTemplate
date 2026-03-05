@@ -5,7 +5,6 @@
 #include <array>
 #include <iostream>
 
-#include <core/Log.hpp>
 #include <app/EngineContext.hpp>
 #include <materials/Material.hpp>
 #include <assets/ShaderCompiler.hpp>
@@ -13,8 +12,8 @@
 
 using namespace vks;
 
-GeometryPass::GeometryPass(const Device& device, const SwapChain& swapChain)
-    : vks::IRenderPass(device, swapChain)
+GeometryPass::GeometryPass(const Device& device, const Ref<IRenderTarget>& renderTarget)
+    : vks::IRenderPass(device, renderTarget)
 {
     GeometryPass::createRenderPass();
     GeometryPass::createFrameBuffers();
@@ -47,7 +46,7 @@ void GeometryPass::record(VkCommandBuffer cmdBuffer, uint32_t imageIndex)
     renderPassInfo.renderPass = handle();
     renderPassInfo.framebuffer = frameBuffer(imageIndex);
     renderPassInfo.renderArea.offset = {0, 0};
-    renderPassInfo.renderArea.extent = m_swapChain.extent();
+    renderPassInfo.renderArea.extent = m_renderTarget->extent();
 
     // Set clear color AND depth
     std::array<VkClearValue, 2> clearValues{};
@@ -61,15 +60,15 @@ void GeometryPass::record(VkCommandBuffer cmdBuffer, uint32_t imageIndex)
     VkViewport viewport{};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
-    viewport.width = static_cast<float>(m_swapChain.extent().width);
-    viewport.height = static_cast<float>(m_swapChain.extent().height);
+    viewport.width = static_cast<float>(m_renderTarget->extent().width);
+    viewport.height = static_cast<float>(m_renderTarget->extent().height);
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
     vkCmdSetViewport(cmdBuffer, 0, 1, &viewport);
 
     VkRect2D scissor{};
     scissor.offset = {0, 0};
-    scissor.extent = m_swapChain.extent();
+    scissor.extent = m_renderTarget->extent();
     vkCmdSetScissor(cmdBuffer, 0, 1, &scissor);
 
     // Get Scene Data
@@ -183,7 +182,7 @@ void GeometryPass::createRenderPass()
 {
     // Color attachment
     VkAttachmentDescription colorAttachment = {};
-    colorAttachment.format = m_swapChain.colorFormat();
+    colorAttachment.format = m_renderTarget->colorFormat();
     colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
     colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -198,7 +197,7 @@ void GeometryPass::createRenderPass()
 
     // Depth Attachment
     VkAttachmentDescription depthAttachment = {};
-    depthAttachment.format = m_swapChain.depthFormat();
+    depthAttachment.format = m_renderTarget->depthFormat();
     depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
 
     depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
@@ -255,22 +254,22 @@ void GeometryPass::createRenderPass()
 
 void GeometryPass::createFrameBuffers()
 {
-    size_t numImages = m_swapChain.numImages();
+    size_t numImages = m_renderTarget->numImages();
 
     m_frameBuffers.resize(numImages);
 
     // Create a framebuffer for each image view
     for (size_t i = 0; i < numImages; ++i)
     {
-        std::array<VkImageView, 2> attachments = {m_swapChain.colorView(i), m_swapChain.depthView(i)};
+        std::array<VkImageView, 2> attachments = {m_renderTarget->colorView(i), m_renderTarget->depthView(i)};
 
         VkFramebufferCreateInfo info = {};
         info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
         info.renderPass = m_renderPass;
         info.attachmentCount = attachments.size();
         info.pAttachments = attachments.data();
-        info.width = m_swapChain.extent().width;
-        info.height = m_swapChain.extent().height;
+        info.width = m_renderTarget->extent().width;
+        info.height = m_renderTarget->extent().height;
         info.layers = 1;
 
         if (vkCreateFramebuffer(m_device.logical(), &info, nullptr,

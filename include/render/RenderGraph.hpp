@@ -3,7 +3,6 @@
 #include <memory>
 #include <gfx/SwapChain.hpp>
 #include <gfx/SyncObjects.hpp>
-#include <gfx/Descriptors.hpp>
 #include <gfx/CommandBuffers.hpp>
 #include <render/passes/IRenderPass.hpp>
 
@@ -15,12 +14,12 @@ namespace vks
     {
     public:
         RenderGraph(const Device& device,
-                    SwapChain& swapChain,
+                    const Ref<SwapChain>& swapChain,
                     const CommandPool& commandPool)
             : device(device),
               swapChain(swapChain),
               commandBuffers(device, swapChain, commandPool),
-              syncObjects(device, swapChain.numImages(), MAX_FRAMES_IN_FLIGHT)
+              syncObjects(device, swapChain->numImages(), MAX_FRAMES_IN_FLIGHT)
         {}
 
         ~RenderGraph()
@@ -53,7 +52,7 @@ namespace vks
         // Cleanup
         void clear() { m_passes.clear(); }
 
-        SwapChain& getSwapChain() { return swapChain; }
+        Ref<SwapChain> getSwapChain() const { return swapChain; }
 
     private:
         void submit(VkCommandBuffer cmd);
@@ -63,7 +62,7 @@ namespace vks
         uint32_t currentFrame = 0;
 
         const Device& device;
-        SwapChain& swapChain;
+        const Ref<SwapChain> swapChain;
 
         std::vector<Ref<IRenderPass>> m_passes;
         CommandBuffers commandBuffers;

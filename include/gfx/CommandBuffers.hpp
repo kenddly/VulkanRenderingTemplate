@@ -8,6 +8,8 @@
 #include <gfx/SwapChain.hpp>
 #include <vulkan/vulkan.h>
 
+#include "core/types.hpp"
+
 
 namespace vks
 {
@@ -15,7 +17,7 @@ namespace vks
     {
     public:
         CommandBuffers(const Device& device,
-                       const SwapChain& swapChain,
+                       const Ref<SwapChain>& swapChain,
                        const CommandPool& commandPool);
         ~CommandBuffers();
 
@@ -40,7 +42,7 @@ namespace vks
         std::vector<VkCommandBuffer> m_commandBuffers;
 
         const Device& m_device;
-        const SwapChain& m_swapChain;
+        const Ref<SwapChain>& m_swapChain;
         const CommandPool& m_commandPool;
 
         void createCommandBuffers(uint32_t count);

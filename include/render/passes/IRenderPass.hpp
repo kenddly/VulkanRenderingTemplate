@@ -5,7 +5,10 @@
 #include <vector>
 #include <vulkan/vulkan.h>
 
-#include "../PipelineManager.hpp"
+#include <render/PipelineManager.hpp>
+#include <render/IRenderTarget.hpp>
+
+#include "core/types.hpp"
 
 namespace vks
 {
@@ -26,7 +29,7 @@ namespace vks
     class IRenderPass : public NonCopyable
     {
     public:
-        IRenderPass(const Device& device, const SwapChain& swapChain);
+        IRenderPass(const Device& device, const Ref<IRenderTarget>& renderTarget);
         ~IRenderPass();
 
         inline const VkRenderPass& handle() const { return m_renderPass; }
@@ -57,7 +60,7 @@ namespace vks
         std::vector<VkFramebuffer> m_frameBuffers;
 
         const Device& m_device;
-        const SwapChain& m_swapChain;
+        const Ref<IRenderTarget> m_renderTarget;
         PipelineManager m_pipelineManager;
 
         virtual void createRenderPass() = 0;

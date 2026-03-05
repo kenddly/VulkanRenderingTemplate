@@ -20,7 +20,7 @@ namespace vks
           m_debugMessenger(m_instance),
           m_window({config.width, config.height}, config.appName, m_instance),
           m_device(m_instance, m_window, Instance::DeviceExtensions),
-          m_swapChain(m_device, m_window),
+          m_swapChain(std::make_shared<SwapChain>(m_device, m_window)),
           m_commandPool(m_device, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT),
           m_renderGraph(m_device, m_swapChain, m_commandPool),
           m_editor(*this)
@@ -29,7 +29,7 @@ namespace vks
         // Camera
         m_camera.init(
             &m_window.input(),
-            m_swapChain.extent().width / float(m_swapChain.extent().height)
+            m_swapChain->extent().width / float(m_swapChain->extent().height)
         );
 
         // Global Descriptor Pool
@@ -139,7 +139,7 @@ namespace vks
         gridPipelineDesc.depthTest = true;
         gridPipelineDesc.depthWrite = true;
         gridPipelineDesc.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-        gridPipelineDesc.viewportExtent = renderer().getSwapChain().extent();
+        gridPipelineDesc.viewportExtent = renderer().getSwapChain()->extent();
         gridPipelineDesc.dynamicStates.push_back(VK_DYNAMIC_STATE_LINE_WIDTH);
 
         // Sphere pipeline
@@ -153,7 +153,7 @@ namespace vks
         spherePipelineDesc.depthTest = true;
         spherePipelineDesc.depthWrite = true;
         spherePipelineDesc.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-        spherePipelineDesc.viewportExtent = renderer().getSwapChain().extent();
+        spherePipelineDesc.viewportExtent = renderer().getSwapChain()->extent();
 
         // Sprite pipeline
         GraphicsPipelineDesc spritePipelineDesc{};
@@ -166,7 +166,7 @@ namespace vks
         spritePipelineDesc.depthTest = true;
         spritePipelineDesc.depthWrite = true;
         spritePipelineDesc.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-        spritePipelineDesc.viewportExtent = renderer().getSwapChain().extent();
+        spritePipelineDesc.viewportExtent = renderer().getSwapChain()->extent();
 
         PipelineDesc gridPipelineDesc_{};
         gridPipelineDesc_.type = PipelineType::Graphics;
@@ -227,7 +227,7 @@ namespace vks
         uiPipelineDesc.depthTest = true;
         uiPipelineDesc.depthWrite = false; // Important for UI
         uiPipelineDesc.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-        uiPipelineDesc.viewportExtent = renderer().getSwapChain().extent();
+        uiPipelineDesc.viewportExtent = renderer().getSwapChain()->extent();
 
         PipelineDesc uiPipelineDesc_{};
         uiPipelineDesc_.type = PipelineType::Graphics;

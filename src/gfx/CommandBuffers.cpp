@@ -9,12 +9,12 @@
 using namespace vks;
 
 CommandBuffers::CommandBuffers(const Device &device,
-                               const SwapChain &swapChain,
+                               const Ref<SwapChain> &swapChain,
                                const CommandPool &commandPool)
     : m_device(device), m_swapChain(swapChain),
       m_commandPool(commandPool)
 {
-    createCommandBuffers(swapChain.numImages());
+    createCommandBuffers(swapChain->numImages());
 }
 
 CommandBuffers::~CommandBuffers() { destroyCommandBuffers(); }
@@ -110,6 +110,6 @@ void CommandBuffers::stopRecording(uint32_t index)
 
 void CommandBuffers::recreate() {
     destroyCommandBuffers();
-    createCommandBuffers(m_swapChain.numImages());
+    createCommandBuffers(m_swapChain->numImages());
 }
 

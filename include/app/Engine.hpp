@@ -75,8 +75,8 @@ namespace vks
         DebugUtilsMessenger m_debugMessenger;
         Window m_window;
         Device m_device;
-        SwapChain m_swapChain;
         CommandPool m_commandPool;
+        Ref<SwapChain> m_swapChain;
 
         // Systems
         RenderGraph m_renderGraph;

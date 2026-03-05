@@ -11,7 +11,7 @@ namespace vks
     class GeometryPass : public IRenderPass
     {
     public:
-        GeometryPass(const Device& device, const SwapChain& swapChain);
+        GeometryPass(const Device& device, const Ref<IRenderTarget>& swapChain);
 
         void update(float dt, uint32_t currentImage) override;
         void record(VkCommandBuffer cmd, uint32_t currentImage) override;
