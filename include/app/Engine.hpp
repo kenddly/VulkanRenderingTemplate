@@ -63,6 +63,9 @@ namespace vks
 
         bool processEvents() const { return m_processEvents; }
 
+        void requestViewportResize(uint32_t width, uint32_t height);
+        Ref<RenderTarget> getRenderTarget() { return viewportTarget; }
+
     private:
         void onInit();
         void drawFrame();
@@ -77,6 +80,7 @@ namespace vks
         Device m_device;
         CommandPool m_commandPool;
         Ref<SwapChain> m_swapChain;
+        Ref<RenderTarget> viewportTarget;
 
         // Systems
         RenderGraph m_renderGraph;
@@ -96,7 +100,8 @@ namespace vks
         // Editor Mode (Enables ImGui and other editor features)
         EngineEditor m_editor;
         bool m_processEvents = false;
-        bool m_dirtyTargets = false;
+        bool m_dirtySwapChain = false;
+        bool m_dirtyViewport = false;
         VkExtent2D m_newExtent = {0, 0};
     };
 }

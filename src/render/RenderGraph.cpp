@@ -24,7 +24,6 @@ namespace vks
                         VK_TRUE, UINT64_MAX);
 
         // Acquire the next available image from the swapchain
-        uint32_t imageIndex;
         VkResult result = vkAcquireNextImageKHR(
             device.logical(), swapChain->handle(), UINT64_MAX,
             syncObjects.imageAvailable(currentFrame), VK_NULL_HANDLE, &imageIndex);
@@ -129,7 +128,7 @@ namespace vks
 
         VkResult result = vkQueuePresentKHR(device.presentQueue(), &presentInfo);
 
-        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_dirtySwapChain)
+        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
         {
             recreateSwapChain();
             syncObjects.recreate(swapChain->numImages());
@@ -183,8 +182,5 @@ namespace vks
 
         // Cleanup old swapchain resources
         swapChain->cleanupOld();
-
-        // Mark swapchain as clean
-        m_dirtySwapChain = false;
     }
 } // namespace vks

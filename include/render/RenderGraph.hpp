@@ -50,13 +50,16 @@ namespace vks
 
         Ref<SwapChain> getSwapChain() const { return swapChain; }
 
+        uint32_t getCurrentFrameIndex() const { return currentFrame; }
+        uint32_t getCurrentImageIndex() const { return currentFrame; }
+
     private:
         void submit(VkCommandBuffer cmd);
         void present(uint32_t imageIndex);
         void update(float dt, uint32_t imageIndex);
         
         uint32_t currentFrame = 0;
-        bool m_dirtySwapChain = false;
+        uint32_t imageIndex = 0;
 
         const Device& device;
         const Ref<SwapChain> swapChain;

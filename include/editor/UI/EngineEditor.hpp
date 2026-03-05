@@ -20,8 +20,11 @@ namespace vks {
 
         Entity getSelectedEntity() { return m_selectedEntity; }
 
+        void allowViewportInput(bool allow) { m_allowViewportInput = allow; }
+        bool isViewportInputAllowed() const { return m_allowViewportInput; }
     private:
         Entity m_selectedEntity = entt::null;
+        bool m_allowViewportInput;
 
         // Helper to register panels easily
         template <typename T> void addPanel();

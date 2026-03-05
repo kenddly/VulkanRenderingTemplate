@@ -11,4 +11,9 @@ namespace vks {
         int newWidth;
         int newHeight;
     };
+
+    struct ViewportResizeEvent {
+        int newWidth;
+        int newHeight;
+    };
 }

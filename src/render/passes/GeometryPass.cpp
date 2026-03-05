@@ -41,10 +41,13 @@ void GeometryPass::update(float dt, uint32_t currentImage)
 
 void GeometryPass::record(VkCommandBuffer cmdBuffer, uint32_t imageIndex)
 {
+    auto& ce = EngineContext::get();
+    auto frameIndex = ce.renderer().getCurrentFrameIndex();
+
     VkRenderPassBeginInfo renderPassInfo{};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     renderPassInfo.renderPass = handle();
-    renderPassInfo.framebuffer = frameBuffer(imageIndex);
+    renderPassInfo.framebuffer = frameBuffer(frameIndex);
     renderPassInfo.renderArea.offset = {0, 0};
     renderPassInfo.renderArea.extent = m_renderTarget->extent();
 
@@ -72,7 +75,6 @@ void GeometryPass::record(VkCommandBuffer cmdBuffer, uint32_t imageIndex)
     vkCmdSetScissor(cmdBuffer, 0, 1, &scissor);
 
     // Get Scene Data
-    auto& ce = EngineContext::get();
     auto renderObjects = ce.scene().view<Renderable, Transform>();
 
     VkDescriptorSet cameraSet = ce.cameraDescriptorSet();
@@ -183,7 +185,7 @@ void GeometryPass::createRenderPass()
     colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
     colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
     colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    colorAttachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
     VkAttachmentReference colorRef = {};
     colorRef.attachment = 0;

@@ -60,16 +60,17 @@ namespace vks
 
         createImages();
         createImageViews();
+        if (m_sampled) createDescriptors();
     }
 
     VkDescriptorSet RenderTarget::renderTargetImage(uint32_t index)
     {
         if (m_viewportDescriptors.empty())
-            createViewportDescriptors();
+            createDescriptors();
         return m_viewportDescriptors[index];
     }
 
-    void RenderTarget::createViewportDescriptors()
+    void RenderTarget::createDescriptors()
     {
         m_viewportDescriptors.clear();
         m_viewportDescriptors.resize(m_imageCount);
@@ -180,19 +181,19 @@ namespace vks
 
         for (uint32_t i = 0; i < m_colorViews.size(); i++)
         {
-            if (m_colorViews[i])
-                vkDestroyImageView(device, m_colorViews[i], nullptr);
-            if (m_colorImages[i])
-                vkDestroyImage(device, m_colorImages[i], nullptr);
-            if (m_colorMemory[i])
-                vkFreeMemory(device, m_colorMemory[i], nullptr);
+            vkDestroyImageView(device, m_colorViews[i], nullptr);
+            vkDestroyImage(device, m_colorImages[i], nullptr);
+            vkFreeMemory(device, m_colorMemory[i], nullptr);
 
-            if (m_depthViews[i])
-                vkDestroyImageView(device, m_depthViews[i], nullptr);
-            if (m_depthImages[i])
-                vkDestroyImage(device, m_depthImages[i], nullptr);
-            if (m_depthMemory[i])
-                vkFreeMemory(device, m_depthMemory[i], nullptr);
+            vkDestroyImageView(device, m_depthViews[i], nullptr);
+            vkDestroyImage(device, m_depthImages[i], nullptr);
+            vkFreeMemory(device, m_depthMemory[i], nullptr);
+        }
+
+        for (auto& desc : m_viewportDescriptors)
+        {
+            if (desc != VK_NULL_HANDLE)
+                ImGui_ImplVulkan_RemoveTexture(desc);
         }
 
         m_colorViews.clear();

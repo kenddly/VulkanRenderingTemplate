@@ -22,7 +22,7 @@ class Camera {
 public:
     Camera()
     {
-        EventManager::subscribe<WindowResizeEvent>([this](WindowResizeEvent e)
+        EventManager::subscribe<ViewportResizeEvent>([this](ViewportResizeEvent e)
         {
             setAspect(float(e.newWidth) / float(e.newHeight));
         });
@@ -39,9 +39,13 @@ public:
     // --------------------------------------------------------------------
     // UPDATE
     // --------------------------------------------------------------------
-    void update(float dt)
+    void update(float dt, bool allowInput)
     {
         if (!m_input) return;
+        if (!allowInput) {
+            m_input->setCursorState(Input::CursorState::NORMAL);
+            return;
+        }
 
         // Mouse look
         glm::vec2 delta = m_input->mouseDelta();

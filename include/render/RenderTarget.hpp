@@ -45,7 +45,7 @@ namespace vks
 
         // Viewport descriptor sets
         std::vector<VkDescriptorSet> m_viewportDescriptors{};
-        void createViewportDescriptors();
+        void createDescriptors();
     protected:
         void createImages();
         void createImageViews();

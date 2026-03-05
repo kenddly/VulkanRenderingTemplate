@@ -41,6 +41,7 @@ namespace vks
                                  .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000)
                                  .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000)
                                  .setMaxSets(1000)
+                                 .setPoolFlags(VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)
                                  .build();
 
         // Camera UBO
@@ -54,9 +55,13 @@ namespace vks
 
         EventManager::subscribe<WindowResizeEvent>([this](WindowResizeEvent e)
         {
-            LOG_INFO("Window resized: {}x{}", e.newWidth, e.newHeight);
-            m_dirtyTargets = true;
+            m_dirtySwapChain = true;
             m_newExtent = {static_cast<uint32_t>(e.newWidth), static_cast<uint32_t>(e.newHeight)};
+        });
+
+        EventManager::subscribe<ViewportResizeEvent>([this](ViewportResizeEvent e)
+        {
+            requestViewportResize(e.newWidth, e.newHeight);
         });
     }
 
@@ -74,6 +79,11 @@ namespace vks
     Ref<DescriptorSetLayout> Engine::getDescriptorSetLayout(const std::string& name) const
     {
         return m_descriptorSetLayouts.at(name);
+    }
+
+    void Engine::requestViewportResize(uint32_t width, uint32_t height)
+    {
+        m_dirtyViewport = true;
     }
 
     void Engine::updateCameraUBO()
@@ -119,12 +129,22 @@ namespace vks
             VK_IMAGE_USAGE_TRANSFER_SRC_BIT
         );
 
+        viewportTarget = std::make_shared<RenderTarget>(
+            device(),
+            renderer().getSwapChain()->extent(),
+            renderer().getSwapChain()->numImages(),
+            renderer().getSwapChain()->colorFormat(),
+            renderer().getSwapChain()->depthFormat(),
+            VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT
+        );
+
         renderTargets.push_back(objectPickingTarget);
+        renderTargets.push_back(viewportTarget);
 
         // Create passes
         auto geometryPass = std::make_shared<GeometryPass>(
             device(),
-            renderer().getSwapChain()
+            viewportTarget
         );
 
         auto imguiPass = std::make_shared<ImGuiRenderPass>(
@@ -276,17 +296,26 @@ namespace vks
 
         m_window.setDrawFrameFunc([this, &app](float dt)
         {
-            if (m_dirtyTargets)
+            bool needRecreate = false;
+            if (m_dirtySwapChain || m_dirtyViewport)
             {
                 vkDeviceWaitIdle(m_device.logical());
+                needRecreate = true;
+            }
 
+            if (needRecreate)
+            {
                 for (auto& target : renderTargets)
                     target->resize(m_newExtent);
-
-                renderer().recreateSwapChain();
-
-                m_dirtyTargets = false;
+                m_dirtyViewport = false;
             }
+
+            if (m_dirtySwapChain)
+            {
+                renderer().recreateSwapChain();
+                m_dirtySwapChain = false;
+            }
+
             // App logic
             app.tick();
 
@@ -304,11 +333,7 @@ namespace vks
 
             app.onImGui();
 
-            // Engine logic
-            ImGuiIO& io = ImGui::GetIO();
-            m_processEvents = !(io.WantCaptureMouse || io.WantCaptureKeyboard);
-            if (m_processEvents)
-                m_camera.update(dt);
+            m_camera.update(dt, m_editor.isViewportInputAllowed());
 
             ImGui::Render();
 
