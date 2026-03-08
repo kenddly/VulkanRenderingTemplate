@@ -20,7 +20,7 @@ ImGuiRenderPass::ImGuiRenderPass(const Device &device,
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
-    io.Fonts->AddFontFromFileTTF("assets/fonts/ClearSans-Regular.ttf");
+    io.Fonts->AddFontFromFileTTF("assets/fonts/ClearSans-Regular.ttf", 16.0f);
     io.FontGlobalScale = 2.0f;
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
@@ -45,9 +45,9 @@ ImGuiRenderPass::ImGuiRenderPass(const Device &device,
     init_info.DescriptorPool = ec.globalDescriptorPool()->getDescriptorPool();
     init_info.MinImageCount = renderTarget->numImages();
     init_info.ImageCount = renderTarget->numImages();
-    init_info.PipelineInfoMain.RenderPass = handle();
-    init_info.PipelineInfoMain.Subpass = 0;
-    init_info.PipelineInfoMain.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+    init_info.RenderPass = handle();
+    // init_info.PipelineInfoMain.Subpass = 0;
+    // init_info.PipelineInfoMain.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
     ImGui_ImplVulkan_Init(&init_info);
 }
 

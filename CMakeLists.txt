@@ -27,6 +27,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
 find_package(imgui REQUIRED)
+find_package(imguizmo REQUIRED)
 find_package(VulkanMemoryAllocator REQUIRED)
 find_package(glslang REQUIRED)
 find_package(EnTT REQUIRED)
@@ -67,6 +68,7 @@ target_link_libraries(${PROJECT_NAME}
         glfw
         glm::glm
         imgui::imgui
+        imguizmo::imguizmo
         GPUOpen::VulkanMemoryAllocator
         glslang::glslang
         EnTT::EnTT

@@ -307,7 +307,7 @@ namespace vks
             ImGui::NewFrame();
 
             auto flags = ImGuiDockNodeFlags_PassthruCentralNode;
-            ImGui::DockSpaceOverViewport(0, nullptr, flags);
+            ImGui::DockSpaceOverViewport(0, flags);
 
             m_editor.onGui();
 

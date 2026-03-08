@@ -99,6 +99,9 @@ public:
         updateMatrices();
     }
 
+    glm::mat4 getViewMatrix() const;
+    glm::mat4 getProjectionMatrix() const;
+
 private:
     // Camera orientation
     float m_yaw   = glm::radians(0.0f);
@@ -138,27 +141,35 @@ private:
 
     void updateMatrices()
     {
-        // Calculate the direction we are looking based on Yaw/Pitch
-        glm::vec3 f = forward();
-
-        // Calculate the View Matrix
-        m_view = glm::lookAt(
-            position,
-            position + f,
-            glm::vec3(0, 0, 1)
-        );
-
-        // Calculate Projection Matrix
-        m_proj = glm::perspective(
-            glm::radians(45.0f),
-            m_aspectRatio,
-            1.0f,
-            1000.0f
-        );
+        m_view = getViewMatrix();
+        m_proj = getProjectionMatrix();
 
         // Flip Y for Vulkan (Clip space Y is inverted compared to OpenGL)
         m_proj[1][1] *= -1;
 
     }
 };
+
+inline glm::mat4 Camera::getViewMatrix() const
+{
+    // Recalculate the direction we are looking based on Yaw/Pitch
+    glm::vec3 f = forward();
+
+    // Calculate the View Matrix
+    return glm::lookAt(
+        position,
+        position + f,
+        glm::vec3(0, 0, 1)
+    );
+}
+
+inline glm::mat4 Camera::getProjectionMatrix() const
+{
+    return glm::perspective(
+        glm::radians(45.0f),
+        m_aspectRatio,
+        1.0f,
+        1000.0f
+    );
+}
 } // namespace vks
