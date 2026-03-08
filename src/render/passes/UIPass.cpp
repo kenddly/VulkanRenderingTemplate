@@ -26,19 +26,33 @@ namespace vks
         m_pixelBuffer->map();
     }
 
+    void UIPass::entitySelection(Engine& ce, vks::Input& input)
+    {
+        if (input.isMousePressed(Input::MouseButton::LEFT))
+        {
+            /* Read from the pixel buffer to get the object ID */
+            auto data = *((uint32_t*)m_pixelBuffer->getMapped());
+            auto entityID = static_cast<Entity>(data - 1);
+            selectedEntityID = entityID;
+
+            if (data == 0)
+            {
+                ce.editor().deselectEntity();
+                return;
+            }
+
+            if (input.isKeyHeld(GLFW_KEY_LEFT_CONTROL))
+                ce.editor().addSelectedEntity(entityID);
+            else
+                ce.editor().selectEntity(entityID);
+        }
+    }
+
     void UIPass::update(float dt, uint32_t imageIndex)
     {
         static auto& ce = EngineContext::get();
         static auto& input = EngineContext::get().window().input();
-        if (input.isMousePressed(Input::MouseButton::LEFT))
-        {
-            /* Read from the pixel buffer to get the object ID */
-            uint32_t* data = (uint32_t*)m_pixelBuffer->getMapped();
-            LOG_INFO("Clicked Object ID: {}", *data);
-            LOG_INFO("Clicked AT: {} {}", ce.editor().viewportMousePos.x, ce.editor().viewportMousePos.y);
-            ce.editor().selectEntity(static_cast<Entity>(*data - 1));
-            selectedEntityID = *data;
-        }
+        entitySelection(ce, input);
     }
 
     void UIPass::record(VkCommandBuffer cmd, uint32_t imageIndex)
@@ -83,6 +97,11 @@ namespace vks
 
         for (auto entity : view)
         {
+            // Skip the selected entity to avoid it being overwritten by the ID of other entities behind it
+            // This behaviour selects the object behind the current one when clicking on the currently selected object
+            if (entity == static_cast<Entity>(selectedEntityID))
+                continue;
+
             auto& renderable = view.get<Renderable>(entity);
             auto& transform = view.get<Transform>(entity);
 
@@ -95,11 +114,6 @@ namespace vks
             } pushData;
             pushData.model = transform.transform;
             pushData.id = (uint32_t)entity + 1;
-
-            // Skip the selected entity to avoid it being overwritten by the ID of other entities behind it
-            // This behaviour selects the object behind the current one when clicking on the currently selected object
-            if (pushData.id == selectedEntityID)
-                continue;
 
             vkCmdPushConstants(
                 cmd,

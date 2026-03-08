@@ -234,6 +234,7 @@ namespace vks
         outlinePipelineDesc.vertexShader = "assets/shaders/outline.vert.spv";
         outlinePipelineDesc.fragmentShader = "assets/shaders/outline.frag.spv";
         outlinePipelineDesc.cull = VK_CULL_MODE_BACK_BIT;
+        outlinePipelineDesc.alphaBlending = true;
         // Cull front faces to create outline effect
 
         PipelineDesc outlinePipelineDesc_{spherePipelineDesc_};

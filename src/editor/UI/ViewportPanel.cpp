@@ -23,6 +23,7 @@ namespace vks
         if (!isOpen)
             return;
 
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
         ImGui::Begin(getTitle(), &isOpen,
                      ImGuiWindowFlags_NoScrollbar |
                      ImGuiWindowFlags_NoScrollWithMouse);
@@ -55,6 +56,7 @@ namespace vks
             ImVec2(0, 0),
             ImVec2(1, 1)
         );
+        ImGui::PopStyleVar();
 
         ImGui::End();
     }

@@ -29,13 +29,13 @@ namespace vks
 
             if (ImGui::TreeNode(cname))
             {
-                ComponentUI<Name>::draw(scene, object);
-                ComponentUI<Transform>::draw(scene, object);
-
-                if (scene.hasComponent<Renderable>(object))
-                    ComponentUI<Renderable>::draw(scene, object);
-                if (scene.hasComponent<RigidBody>(object))
-                    ComponentUI<RigidBody>::draw(scene, object);
+                // ComponentUI<Name>::draw(scene, object);
+                // ComponentUI<Transform>::draw(scene, object);
+                //
+                // if (scene.hasComponent<Renderable>(object))
+                //     ComponentUI<Renderable>::draw(scene, object);
+                // if (scene.hasComponent<RigidBody>(object))
+                //     ComponentUI<RigidBody>::draw(scene, object);
 
                 ImGui::TreePop();
             }

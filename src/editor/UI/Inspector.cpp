@@ -16,16 +16,14 @@ namespace vks
         ImGui::Begin(getTitle());
 
         // 1. Get Selected Entity
-        auto selectedId = m_editor.getSelectedEntity();
+        auto selectedIds = m_editor.getSelectedEntities();
 
-        if (selectedId != entt::null)
-        {
-            drawComponents(selectedId);
-        }
-        else
-        {
+        if (selectedIds.size() == 0)
             ImGui::Text("No entity selected.");
-        }
+        else if (selectedIds.size() == 1)
+            drawComponents(*selectedIds.begin());
+        else if (selectedIds.size() > 1)
+            ImGui::Text("Multiple entities selected. Select a single entity to view details.");
 
         ImGui::End();
     }

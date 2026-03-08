@@ -16,17 +16,18 @@ namespace vks {
 
         void onInit();
         void onGui() const;
-        void selectEntity(Entity entityId) { m_selectedEntity = entityId; }
-        void deselectEntity() { m_selectedEntity = entt::null; }
+        void selectEntity(Entity entityId) { m_selectedEntities.clear(); addSelectedEntity(entityId); }
+        void addSelectedEntity(Entity entityId) { m_selectedEntities.emplace(entityId); }
+        void deselectEntity() { m_selectedEntities.clear(); }
 
-        Entity getSelectedEntity() { return m_selectedEntity; }
+        std::unordered_set<Entity> getSelectedEntities() { return m_selectedEntities; }
 
         void allowViewportInput(bool allow) { m_allowViewportInput = allow; }
         bool isViewportInputAllowed() const { return m_allowViewportInput; }
 
         glm::vec2 viewportMousePos;
     private:
-        Entity m_selectedEntity = entt::null;
+        std::unordered_set<Entity> m_selectedEntities{};
         bool m_allowViewportInput;
 
         // Helper to register panels easily

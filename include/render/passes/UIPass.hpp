@@ -1,6 +1,9 @@
 #pragma once
 #include <render/passes/IRenderPass.hpp>
 
+#include "app/Engine.hpp"
+#include "scene/Scene.hpp"
+
 namespace vks
 {
     class Buffer;
@@ -9,6 +12,7 @@ namespace vks
     {
     public:
         UIPass(const Device& device, const Ref<IRenderTarget>& renderTarget);
+        void entitySelection(Engine& ce, vks::Input& input);
 
         void update(float dt, uint32_t imageIndex) override;
         void record(VkCommandBuffer cmd, uint32_t imageIndex) override;
@@ -25,6 +29,6 @@ namespace vks
 
         void capturePixelID(VkCommandBuffer cmd, VkImage srcImage, glm::vec2 mousePos);
 
-        uint32_t selectedEntityID = 0;
+        Entity selectedEntityID;
     };
 }

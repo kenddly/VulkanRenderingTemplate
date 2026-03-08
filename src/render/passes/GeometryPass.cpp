@@ -134,9 +134,9 @@ void GeometryPass::record(VkCommandBuffer cmdBuffer, uint32_t imageIndex)
         );
     }
 
-    auto entity = ce.editor().getSelectedEntity();
+    auto selectedEntities = ce.editor().getSelectedEntities();
 
-    if (entity != entt::null)
+    for (auto entity : selectedEntities)
     {
         auto& renderable = ce.scene().getComponent<Renderable>(entity);
         auto& transform = ce.scene().getComponent<Transform>(entity);
@@ -156,7 +156,7 @@ void GeometryPass::record(VkCommandBuffer cmdBuffer, uint32_t imageIndex)
         {
             glm::mat4 model;
             float outlineWidth = 0.05f;
-            alignas(16) glm::vec4 color = glm::vec4(1.0f, 1.0f, 0.4f, 1.0f);
+            alignas(16) glm::vec4 color = glm::vec4(1.0f, 1.0f, 0.4f, 0.1f);
         } pushData;
 
         pushData.model = transform.transform;
