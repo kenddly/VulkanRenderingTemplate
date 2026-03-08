@@ -307,7 +307,7 @@ namespace vks
             ImGui::NewFrame();
 
             auto flags = ImGuiDockNodeFlags_PassthruCentralNode;
-            ImGui::DockSpaceOverViewport(0, flags);
+            ImGui::DockSpaceOverViewport(nullptr, flags);
 
             m_editor.onGui();
 
@@ -323,10 +323,6 @@ namespace vks
 
         m_window.mainLoop();
         vkDeviceWaitIdle(m_device.logical());
-    }
-
-    void Engine::onImGui()
-    {
     }
 
     void Engine::handleRecreate()

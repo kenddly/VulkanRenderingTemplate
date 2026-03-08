@@ -15,7 +15,7 @@ namespace vks {
         EngineEditor(Engine& engine);
 
         void onInit();
-        void onGui() const;
+        void onGui();
         void selectEntity(Entity entityId) { m_selectedEntities.clear(); addSelectedEntity(entityId); }
         void addSelectedEntity(Entity entityId) { m_selectedEntities.emplace(entityId); }
         void deselectEntity() { m_selectedEntities.clear(); }
@@ -25,10 +25,10 @@ namespace vks {
         void allowViewportInput(bool allow) { m_allowViewportInput = allow; }
         bool isViewportInputAllowed() const { return m_allowViewportInput; }
 
-        glm::vec2 viewportMousePos;
+        glm::vec2 viewportMousePos{};
     private:
         std::unordered_set<Entity> m_selectedEntities{};
-        bool m_allowViewportInput;
+        bool m_allowViewportInput = false;
 
         // Helper to register panels easily
         template <typename T> void addPanel();

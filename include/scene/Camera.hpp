@@ -60,10 +60,6 @@ public:
             // Clamp pitch (avoid gimbal lock)
             const float limit = glm::radians(89.0f);
             m_pitch = glm::clamp(m_pitch, -limit, limit);
-        }
-
-        if (m_input->isMouseReleased(Input::MouseButton::RIGHT))
-            m_input->setCursorState(Input::CursorState::NORMAL);
 
         // Movement controls
         glm::vec3 f = forward();
@@ -82,6 +78,10 @@ public:
         if (m_input->isKeyHeld(GLFW_KEY_Q)) position -= u * currentSpeed * dt;
 
         updateMatrices();
+        }
+
+        if (m_input->isMouseReleased(Input::MouseButton::RIGHT))
+            m_input->setCursorState(Input::CursorState::NORMAL);
     }
 
     // --------------------------------------------------------------------

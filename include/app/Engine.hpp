@@ -68,7 +68,6 @@ namespace vks
         void drawFrame();
         void updateCameraUBO();
 
-        void onImGui();
         void handleRecreate();
 
         // Core

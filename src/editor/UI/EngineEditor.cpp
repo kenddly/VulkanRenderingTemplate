@@ -25,7 +25,7 @@ namespace vks
         resourceManager = std::make_shared<EditorResourceManager>(m_engine.device());
     }
 
-    void EngineEditor::onGui() const
+    void EngineEditor::onGui()
     {
         // 1. Draw Main Menu Bar (Global)
         if (ImGui::BeginMainMenuBar())

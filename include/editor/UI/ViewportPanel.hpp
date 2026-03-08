@@ -1,8 +1,8 @@
 #pragma once
 
 #include <imgui.h>
-#include <glm/fwd.hpp>
 
+#include "EditorGizmo.hpp"
 #include "IEditorPanel.hpp"
 
 namespace vks
@@ -17,8 +17,7 @@ namespace vks
         void onGui() override;
         void handleInput(ImVec2 imageScreenPos, ImVec2 mouseScreenPos);
     private:
-        ImVec2 m_lastViewportSize{0, 0};
+        EditorGizmo m_gizmo;
         bool m_isCameraCaptured = false;
-        bool m_usingGizmo = false;
     };
 }
