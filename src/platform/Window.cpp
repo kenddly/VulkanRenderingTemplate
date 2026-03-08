@@ -42,6 +42,10 @@ Window::~Window() {
 
 void Window::mainLoop() {
     float lastTime = static_cast<float>(glfwGetTime());
+    // Emit the initial resize event to ensure everything is sized correctly from the start
+    glm::ivec2 initialSize;
+    framebufferSize(initialSize);
+    EventManager::emit(WindowResizeEvent{initialSize.x, initialSize.y});
 
     while (!glfwWindowShouldClose(m_window)) {
         glfwPollEvents();

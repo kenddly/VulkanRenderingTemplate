@@ -9,7 +9,8 @@
 namespace vks {
     class Engine;
 
-    class EngineEditor {
+    class EngineEditor
+    {
     public:
         EngineEditor(Engine& engine);
 
@@ -22,6 +23,8 @@ namespace vks {
 
         void allowViewportInput(bool allow) { m_allowViewportInput = allow; }
         bool isViewportInputAllowed() const { return m_allowViewportInput; }
+
+        glm::vec2 viewportMousePos;
     private:
         Entity m_selectedEntity = entt::null;
         bool m_allowViewportInput;

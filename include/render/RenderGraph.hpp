@@ -43,7 +43,7 @@ namespace vks
         void execute();
 
         void recreatePasses();
-        void recreateSwapChain();
+        void recreate();
 
         // Cleanup
         void clear() { m_passes.clear(); }

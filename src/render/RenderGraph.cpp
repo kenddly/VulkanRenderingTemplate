@@ -30,7 +30,7 @@ namespace vks
         
         if (result == VK_ERROR_OUT_OF_DATE_KHR)
         {
-            recreateSwapChain();
+            recreate();
             return;
         }
         else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
@@ -130,7 +130,7 @@ namespace vks
 
         if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
         {
-            recreateSwapChain();
+            recreate();
             syncObjects.recreate(swapChain->numImages());
         }
         else if (result != VK_SUCCESS)
@@ -142,7 +142,7 @@ namespace vks
     void RenderGraph::update(float dt, uint32_t imageIndex)
     {
         static auto& ce = EngineContext::get();
-        if (ce.processEvents())
+        if (ce.editor().isViewportInputAllowed())
         {
             for (auto& pass : m_passes)
             {
@@ -160,18 +160,8 @@ namespace vks
         // Note: cleanupOld is usually handled inside specific recreatePasses logic or destructors
     }
 
-    void RenderGraph::recreateSwapChain()
+    void RenderGraph::recreate()
     {
-        glm::ivec2 size;
-        auto& ce = EngineContext::get();
-        auto& window = ce.window();
-        window.framebufferSize(size);
-        while (size[0] == 0 || size[1] == 0)
-        {
-            window.framebufferSize(size);
-            glfwWaitEvents();
-        }
-
         vkDeviceWaitIdle(device.logical());
 
         // Recreate Swapchain

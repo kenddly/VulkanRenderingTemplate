@@ -61,9 +61,6 @@ namespace vks
         void registerRenderPass(Ref<IRenderPass> pass);
         Ref<DescriptorSetLayout> getDescriptorSetLayout(const std::string& name) const;
 
-        bool processEvents() const { return m_processEvents; }
-
-        void requestViewportResize(uint32_t width, uint32_t height);
         Ref<RenderTarget> getRenderTarget() { return viewportTarget; }
 
     private:
@@ -72,6 +69,7 @@ namespace vks
         void updateCameraUBO();
 
         void onImGui();
+        void handleRecreate();
 
         // Core
         Instance m_instance;
@@ -95,13 +93,13 @@ namespace vks
         Ref<Buffer> m_cameraUboBuffer;
         VkDescriptorSet m_cameraDescriptorSet = VK_NULL_HANDLE;
 
-        std::vector<Ref<RenderTarget>> renderTargets;
+        std::vector<Ref<RenderTarget>> viewportRenderTargets;
+        bool m_dirtySwapChain = false;
+        bool m_dirtyViewport = false;
+        VkExtent2D m_newViewportExtent = {1, 1};
+        VkExtent2D m_newWindowExtent = {1, 1};
 
         // Editor Mode (Enables ImGui and other editor features)
         EngineEditor m_editor;
-        bool m_processEvents = false;
-        bool m_dirtySwapChain = false;
-        bool m_dirtyViewport = false;
-        VkExtent2D m_newExtent = {0, 0};
     };
 }

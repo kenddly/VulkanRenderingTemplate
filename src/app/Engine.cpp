@@ -22,6 +22,7 @@ namespace vks
     Engine::Engine(const EngineConfig& config)
         : m_instance(config.appName, config.engineName, config.enableValidation),
           m_debugMessenger(m_instance),
+          m_newWindowExtent({config.width, config.height}),
           m_window({config.width, config.height}, config.appName, m_instance),
           m_device(m_instance, m_window, Instance::DeviceExtensions),
           m_swapChain(std::make_shared<SwapChain>(m_device, m_window)),
@@ -56,12 +57,13 @@ namespace vks
         EventManager::subscribe<WindowResizeEvent>([this](WindowResizeEvent e)
         {
             m_dirtySwapChain = true;
-            m_newExtent = {static_cast<uint32_t>(e.newWidth), static_cast<uint32_t>(e.newHeight)};
+            m_newWindowExtent = {static_cast<uint32_t>(e.newWidth), static_cast<uint32_t>(e.newHeight)};
         });
 
         EventManager::subscribe<ViewportResizeEvent>([this](ViewportResizeEvent e)
         {
-            requestViewportResize(e.newWidth, e.newHeight);
+            m_dirtyViewport = true;
+            m_newViewportExtent = {static_cast<uint32_t>(e.newWidth), static_cast<uint32_t>(e.newHeight)};
         });
     }
 
@@ -79,11 +81,6 @@ namespace vks
     Ref<DescriptorSetLayout> Engine::getDescriptorSetLayout(const std::string& name) const
     {
         return m_descriptorSetLayouts.at(name);
-    }
-
-    void Engine::requestViewportResize(uint32_t width, uint32_t height)
-    {
-        m_dirtyViewport = true;
     }
 
     void Engine::updateCameraUBO()
@@ -138,8 +135,8 @@ namespace vks
             VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT
         );
 
-        renderTargets.push_back(objectPickingTarget);
-        renderTargets.push_back(viewportTarget);
+        viewportRenderTargets.push_back(objectPickingTarget);
+        viewportRenderTargets.push_back(viewportTarget);
 
         // Create passes
         auto geometryPass = std::make_shared<GeometryPass>(
@@ -296,25 +293,7 @@ namespace vks
 
         m_window.setDrawFrameFunc([this, &app](float dt)
         {
-            bool needRecreate = false;
-            if (m_dirtySwapChain || m_dirtyViewport)
-            {
-                vkDeviceWaitIdle(m_device.logical());
-                needRecreate = true;
-            }
-
-            if (needRecreate)
-            {
-                for (auto& target : renderTargets)
-                    target->resize(m_newExtent);
-                m_dirtyViewport = false;
-            }
-
-            if (m_dirtySwapChain)
-            {
-                renderer().recreateSwapChain();
-                m_dirtySwapChain = false;
-            }
+            handleRecreate();
 
             // App logic
             app.tick();
@@ -347,5 +326,29 @@ namespace vks
 
     void Engine::onImGui()
     {
+    }
+
+    void Engine::handleRecreate()
+    {
+        bool needRecreate = false;
+        if (m_dirtySwapChain || m_dirtyViewport)
+        {
+            vkDeviceWaitIdle(m_device.logical());
+            needRecreate = true;
+        }
+
+        if (needRecreate)
+        {
+            for (auto& target : viewportRenderTargets)
+                target->resize(m_newViewportExtent);
+            renderer().recreatePasses();
+            m_dirtyViewport = false;
+        }
+
+        if (m_dirtySwapChain)
+        {
+            renderer().recreate();
+            m_dirtySwapChain = false;
+        }
     }
 }

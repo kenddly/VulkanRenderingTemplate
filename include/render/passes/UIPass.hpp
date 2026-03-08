@@ -24,5 +24,7 @@ namespace vks
         void createFrameBuffers() override;
 
         void capturePixelID(VkCommandBuffer cmd, VkImage srcImage, glm::vec2 mousePos);
+
+        uint32_t selectedEntityID = 0;
     };
 }

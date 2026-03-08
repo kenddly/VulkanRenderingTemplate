@@ -35,7 +35,9 @@ namespace vks
             /* Read from the pixel buffer to get the object ID */
             uint32_t* data = (uint32_t*)m_pixelBuffer->getMapped();
             LOG_INFO("Clicked Object ID: {}", *data);
-            ce.editor().selectEntity((Entity) (*data - 1));
+            LOG_INFO("Clicked AT: {} {}", ce.editor().viewportMousePos.x, ce.editor().viewportMousePos.y);
+            ce.editor().selectEntity(static_cast<Entity>(*data - 1));
+            selectedEntityID = *data;
         }
     }
 
@@ -94,6 +96,11 @@ namespace vks
             pushData.model = transform.transform;
             pushData.id = (uint32_t)entity + 1;
 
+            // Skip the selected entity to avoid it being overwritten by the ID of other entities behind it
+            // This behaviour selects the object behind the current one when clicking on the currently selected object
+            if (pushData.id == selectedEntityID)
+                continue;
+
             vkCmdPushConstants(
                 cmd,
                 layout,
@@ -108,8 +115,7 @@ namespace vks
 
         vkCmdEndRenderPass(cmd);
 
-        static auto& input = EngineContext::get().window().input();
-        capturePixelID(cmd, m_renderTarget->colorImage(imageIndex), input.mousePos());
+        capturePixelID(cmd, m_renderTarget->colorImage(imageIndex), ce.editor().viewportMousePos);
     }
 
     void UIPass::recreate()
