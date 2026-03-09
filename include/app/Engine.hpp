@@ -16,6 +16,8 @@
 #include <gfx/Buffer.hpp>
 #include <editor/UI/EngineEditor.hpp>
 
+#include "scene/PhysicsSystem.hpp"
+
 
 namespace vks
 {
@@ -46,6 +48,7 @@ namespace vks
         Scene& scene() { return m_scene; }
         EngineEditor& editor() { return m_editor; }
         AssetManager& assets() { return m_assets; }
+        PhysicsSystem& physics() { return m_physicsSystem; }
 
         Camera& camera() { return m_camera; }
         Ref<Buffer> cameraBuffer() { return m_cameraUboBuffer; }
@@ -100,5 +103,6 @@ namespace vks
 
         // Editor Mode (Enables ImGui and other editor features)
         EngineEditor m_editor;
+        PhysicsSystem m_physicsSystem;
     };
 }

@@ -21,6 +21,11 @@ class VulkanRenderingTemplate(ConanFile):
         self.requires("spdlog/1.17.0")
         self.requires("stb/cci.20240531")
         self.requires("imguizmo/1.83")
+        self.requires("joltphysics/5.2.0")
+
+    def configure(self):
+        self.options["joltphysics"].debug_renderer_in_debug_and_release = True
+        self.options["joltphysics"].debug_renderer = True
 
 
     def generate(self):

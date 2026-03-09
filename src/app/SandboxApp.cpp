@@ -37,16 +37,11 @@ namespace vks
         assets.add<Ref<Model>>("sphere", sphere);
         assets.add<Ref<Model>>("quad", quad);
 
-        Ref<Texture> spriteTexture = std::make_shared<Texture>(
-            engine.device(),
-            "assets/textures/player.png"
-        );
         Ref<Texture> spongeBobTexture = std::make_shared<Texture>(
             engine.device(),
             "assets/textures/Spongebobplush.png"
         );
 
-        assets.add<Ref<Texture>>("sprite_texture", spriteTexture);
         assets.add<Ref<Texture>>("spongebob_texture", spongeBobTexture);
 
         // --- Red material ---
@@ -95,35 +90,42 @@ namespace vks
         // RED SPHERE
         {
             auto obj = scene.createEntity("red_sphere");
-            auto transform = scene.getComponent<Transform>(obj);
-            transform.transform = glm::mat4(1.0f);
+            scene.addComponent<RigidBody>(obj);
 
             auto& renderable = scene.addComponent<Renderable>(obj);
             renderable.model = assets.get<Ref<Model>>("sphere");
             renderable.material = assets.get<Ref<Material>>("red_sphere");
+            engine.physics().addRigidBody(scene, obj, vks::ShapeDesc::mesh(*renderable.model.get()));
         }
 
-        // GRID
+        // Surface
         {
-            auto obj = scene.createEntity("grid");
+            auto obj = scene.createEntity("surface");
+            scene.addComponent<RigidBody>(obj);
+            auto& transform = scene.getComponent<Transform>(obj);
+            transform.position = glm::vec3{0.0f, 0.0f, -10.0f};
+            transform.scale = glm::vec3{100.0f, 100.0f, 1.0f};
+            transform.updateTransform();
 
             auto& renderable = scene.addComponent<Renderable>(obj);
-            renderable.model = nullptr; // Procedural, no model
-            renderable.material = assets.get<Ref<Material>>("grid");
+            renderable.model = assets.get<Ref<Model>>("quad");
+            renderable.material = assets.get<Ref<Material>>("red_sphere")->clone();
+            renderable.material->getAs<ColorMaterial>()->uboData.color = glm::vec4{0.5f, 0.5f, 0.5f, 1.0f};
+            engine.physics().addStaticBody(scene, obj, vks::ShapeDesc::convexHull(*renderable.model.get()));
         }
 
         // SPRITE
         {
             auto obj = scene.createEntity("sprite");
             auto transform = scene.getComponent<Transform>(obj);
-            transform.transform = glm::translate(
-                glm::mat4(1.0f),
-                glm::vec3{-2.0f, 0.0f, 0.0f}
-            );
+            transform.position = glm::vec3{2.0f, 0.5f, 0.0f};
+            transform.updateTransform();
+            scene.addComponent<RigidBody>(obj);
 
             auto& renderable = scene.addComponent<Renderable>(obj);
             renderable.model = assets.get<Ref<Model>>("quad"); // Reuse quad model
             renderable.material = assets.get<Ref<Material>>("sprite");
+            engine.physics().addRigidBody(scene, obj, vks::ShapeDesc::convexHull(*renderable.model.get()));
         }
     }
 

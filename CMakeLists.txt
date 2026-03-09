@@ -33,6 +33,7 @@ find_package(glslang REQUIRED)
 find_package(EnTT REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(stb REQUIRED)
+find_package(Jolt REQUIRED)
 
 
 # Vulkan (native system SDK)
@@ -60,6 +61,10 @@ target_include_directories(${PROJECT_NAME}
 
 # Needed for ImGui Vulkan backend
 target_compile_definitions(${PROJECT_NAME} PUBLIC IMGUI_IMPL_VULKAN)
+target_compile_definitions(${PROJECT_NAME} PUBLIC JPH_DEBUG_RENDERER JPH_PROFILE_ENABLED)
+target_compile_options(${PROJECT_NAME} PRIVATE
+        -msse4.1 -msse4.2 -mavx -mavx2 -mf16c -mfma -mlzcnt -mbmi
+)
 
 # Link Conan libraries
 target_link_libraries(${PROJECT_NAME}
@@ -74,6 +79,7 @@ target_link_libraries(${PROJECT_NAME}
         EnTT::EnTT
         spdlog::spdlog
         stb::stb
+        Jolt::Jolt
 )
 
 # ---------------------------

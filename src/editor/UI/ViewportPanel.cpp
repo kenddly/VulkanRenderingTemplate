@@ -64,7 +64,18 @@ namespace vks
             ImVec2(1, 1)
         );
 
+        auto proj = m_engine.camera().getProjectionMatrix();
+        auto viewProj = proj * m_engine.camera().getViewMatrix();
+
+        m_engine.physics().getDebugRenderer().render(
+            m_engine.physics().getJoltSystem(),
+            viewProj,
+            ImGui::GetWindowDrawList(),
+            {avail.x, avail.y},
+            {imageScreenPos.x, imageScreenPos.y}
+        );
         m_gizmo.onGui(imageScreenPos, avail);
+
         handleInput(imageScreenPos, mouseScreenPos);
 
         ImGui::PopStyleVar();

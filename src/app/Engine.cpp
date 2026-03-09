@@ -14,6 +14,7 @@
 #include <render/passes/UIPass.hpp>
 
 #include "core/Log.hpp"
+#include "editor/DebugRegistry.hpp"
 #include "platform/events/EventManager.hpp"
 #include "platform/events/Events.hpp"
 
@@ -69,8 +70,10 @@ namespace vks
 
     Engine::~Engine()
     {
+        scene().clear();
         m_renderGraph.clear();
         m_assets.clearAll();
+        m_physicsSystem.shutdown();
     }
 
     void Engine::registerRenderPass(Ref<IRenderPass> pass)
@@ -281,6 +284,7 @@ namespace vks
         uiPass->pipelines().createOrReplace("ObjectPicker", uiPipelineDesc_);
 
         m_editor.onInit();
+        m_physicsSystem.onInit(2048, 0, glm::vec3{0.0f, 0.0f, -0.81f});
     }
 
     void Engine::run(Application& app)
@@ -292,7 +296,10 @@ namespace vks
         // Let app setup engine
         app.onInit(*this);
 
-        m_window.setDrawFrameFunc([this, &app](float dt)
+        bool enablePyhsics = true;
+        DebugRegistry::get().add("Enable Physics", enablePyhsics);
+
+        m_window.setDrawFrameFunc([this, &app, &enablePyhsics](float dt)
         {
             handleRecreate();
 
@@ -319,6 +326,9 @@ namespace vks
 
             // Render
             drawFrame();
+
+            if (enablePyhsics)
+                m_physicsSystem.update(scene(), dt, 1);
         });
 
         m_window.mainLoop();

@@ -4,6 +4,7 @@
 
 #include "EditorGizmo.hpp"
 #include "IEditorPanel.hpp"
+#include "scene/PhysicsDebugRenderer.hpp"
 
 namespace vks
 {

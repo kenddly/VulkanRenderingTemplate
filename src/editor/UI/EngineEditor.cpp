@@ -7,6 +7,7 @@
 #include <editor/UI/AssetBrowserPanel.hpp>
 #include <editor/UI/SceneHierarchyPanel.hpp>
 #include <editor/UI/ViewportPanel.hpp>
+#include <editor/UI/DebugPanel.hpp>
 
 namespace vks
 {
@@ -21,6 +22,7 @@ namespace vks
         addPanel<AssetBrowserPanel>();
         addPanel<InspectorPanel>();
         addPanel<ViewportPanel>();
+        addPanel<DebugPanel>();
 
         resourceManager = std::make_shared<EditorResourceManager>(m_engine.device());
     }
